@@ -1,4 +1,3 @@
-// src/ai/flows/chat-companion-flow.ts
 'use server';
 /**
  * @fileOverview A chat companion AI agent for reducing loneliness.
@@ -48,6 +47,16 @@ const chatCompanionFlow = ai.defineFlow<
   inputSchema: ChatCompanionInputSchema,
   outputSchema: ChatCompanionOutputSchema,
 }, async input => {
-  const {output} = await prompt(input);
-  return output!;
+  // IMPORTANT: Make sure you have set the GOOGLE_GENAI_API_KEY environment variable
+  // and that the API key is valid.
+  try {
+    const {output} = await prompt(input);
+    return output!;
+  } catch (error) {
+    console.error("Error in chatCompanionFlow:", error);
+    return {
+      response: "An error occurred while processing your request. Please check your API key and try again.",
+    };
+  }
 });
+
