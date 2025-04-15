@@ -1,1 +1,2 @@
-// Flows will be imported for their side effects in this file.
+import '@/ai/flows/chat-companion-flow.ts';
+import '@/ai/flows/identify-medicine.ts';
