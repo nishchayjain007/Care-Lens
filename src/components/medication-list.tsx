@@ -38,3 +38,4 @@ const MedicationList: React.FC<MedicationListProps> = ({ medications }) => {
 };
 
 export default MedicationList;
+

@@ -28,7 +28,9 @@ import Dashboard from "@/components/dashboard";
 import { MedicationReminderAgent } from "@/components/medication-reminder-agent";
 import { SafetyAgent } from "@/components/safety-agent";
 import { Textarea } from "@/components/ui/textarea";
-import {useToast} from "@/hooks/use-toast";
+import { useToast} from "@/hooks/use-toast";
+import MedicationForm from "@/components/medication-form";
+import MedicationList from "@/components/medication-list";
 
 
 // Dummy data for the medication list
@@ -56,6 +58,7 @@ export default function Home() {
     const [chatResponse, setChatResponse] = useState('');
     const [chatMessage, setChatMessage] = useState('');
     const [hasCameraPermission, setHasCameraPermission] = useState(false);
+    const [alertSent, setAlertSent] = useState(false);
 
     const toggleSpeak = () => {
         if (!medicineInfo) {
@@ -92,6 +95,17 @@ export default function Home() {
         setIsListening(prevIsListening => !prevIsListening);
     };
 
+    const simulateFall = () => {
+        // Simulate fall detection logic here
+        setAlertSent(true);
+        toast({
+            title: "Fall Detected!",
+            description: "Alert has been sent to emergency contacts.",
+            duration: 5000,
+        });
+    };
+
+
     useEffect(() => {
         if (isListening) {
             // Start speech recognition
@@ -105,11 +119,9 @@ export default function Home() {
         return () => stopSpeechRecognition();
     }, [isListening]);
 
-
-
-    useEffect(() => {
-        return () => window.speechSynthesis.cancel(); // Cleanup on unmount
-    }, []);
+    const addMedication = (newMedication: any) => {
+        setMedications([...medications, newMedication]);
+    };
 
     return (
         <SidebarProvider>
@@ -179,7 +191,9 @@ export default function Home() {
                                         )}
                                     </CardContent>
                                 </Card>
-                                <MedicationReminderAgent medications={medications} />
+                                <MedicationForm onAddMedication={addMedication} />
+                                <MedicationList medications={medications} />
+
                                 {medicineInfo && (
                                     <Card className="w-full max-w-md">
                                         <MedicineInfo
@@ -204,11 +218,13 @@ export default function Home() {
                                         </div>
                                     </Card>
                                 )}
+                                <Button onClick={simulateFall} disabled={alertSent}>
+                                    {alertSent ? "Alert Sent!" : "Simulate Fall"}
+                                </Button>
                             </CardContent>
                         </CardHeader>
                     </Card>
-                      <Dashboard/>
-                      <SafetyAgent/>
+                    <Dashboard/>
                 </main>
             </div>
             <Toaster />
@@ -229,6 +245,4 @@ function stopSpeechRecognition() {
     console.log('Stopping speech recognition (placeholder)');
     // Implement logic to stop speech recognition
 }
-
-
 
