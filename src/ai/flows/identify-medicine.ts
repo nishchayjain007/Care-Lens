@@ -45,7 +45,22 @@ const extractMedicineName = ai.defineTool(
     // TODO: Implement OCR logic to extract text from the image.
     // For now, return a placeholder medicine name.
     // IMPORTANT: Using a consistent placeholder to prevent issues with the medicine database lookup.
-    return 'Placeholder Medicine';
+    // return 'Placeholder Medicine';
+    // Implement OCR logic here
+    // Use the AI to extract the medicine name from the image
+    // This is a placeholder, replace with actual Genkit OCR call
+    const medicineName = await ai.callModel('googleai/gemini-vision-pro', {
+      prompt: `Extract the medicine name from this image. Be very precise.
+      Respond only with the medicine name, nothing else.`,
+      input: {
+        inlineData: {
+          data: input.photoUrl,
+          mimeType: 'image/png',
+        },
+      },
+    });
+    console.log(`Extracted medicine name: ${medicineName.output}`);
+    return medicineName.output;
   }
 );
 
