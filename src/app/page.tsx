@@ -24,6 +24,11 @@ import { useToast } from "@/hooks/use-toast";
 import Dashboard from "@/components/dashboard";
 import MedicationForm from "@/components/medication-form";
 import MedicationList from "@/components/medication-list";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { useTheme } from 'next-themes';
+import { Separator } from "@/components/ui/separator";
+import { ReminderDialog } from "@/components/reminder-dialog";
 
 // Dummy data for the medication list
 const dummyMedications = [
@@ -37,15 +42,37 @@ export default function Home() {
   const { toast } = useToast();
   const router = useRouter();
   const [medications, setMedications] = useState(dummyMedications);
+  const [fontSize, setFontSize] = useState(16); // Default font size
+  const { theme, setTheme } = useTheme();
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const handleAddMedication = (newMedication: any) => {
     setMedications([...medications, newMedication]);
   };
 
+    const toggleSpeak = () => {
+        if (!medicineInfo) return;
+
+        const message = `Medicine Name: ${medicineInfo.name}, Usage: ${medicineInfo.instructions}, Dosage: ${medicineInfo.dosage}, Schedule: ${medicineInfo.schedule}, Frequency: ${medicineInfo.frequency}, Duration: ${medicineInfo.duration}, Side Effects: ${medicineInfo.sideEffects}`;
+
+        if (isSpeaking) {
+            window.speechSynthesis.cancel();
+        } else {
+            const utterance = new SpeechSynthesisUtterance(message);
+            window.speechSynthesis.speak(utterance);
+        }
+
+        setIsSpeaking(!isSpeaking);
+    };
+
+  useEffect(() => {
+    return () => window.speechSynthesis.cancel(); // Cleanup on unmount
+  }, []);
+
   return (
     <SidebarProvider>
       <div className="flex h-screen">
-        <main className="flex-1 p-4 flex flex-col items-center space-y-4">
+        <main className="flex-1 p-4 flex flex-col items-center space-y-4" style={{ fontSize: `${fontSize}px` }}>
           <Card className="w-full max-w-md">
             <CardHeader>
               <CardTitle className="text-lg">Welcome to Care Lens+</CardTitle>
@@ -55,15 +82,41 @@ export default function Home() {
             </CardContent>
           </Card>
 
-          <Button onClick={() => router.push('/medicine')}>
-            <Icons.camera className="mr-2 h-4 w-4" />
-            Identify Medicine
-          </Button>
+          <div className="flex space-x-2">
+              <Button onClick={() => router.push('/medicine')}>
+                  <Icons.camera className="mr-2 h-4 w-4" />
+                  Identify Medicine
+              </Button>
+
+              <Button onClick={() => { /* Navigate to scanned medicines */ }}>
+                  <Icons.listChecks className="mr-2 h-4 w-4" />
+                  View Scanned Medicines
+              </Button>
+          </div>
+
+            <div className="flex items-center space-x-2">
+                <Button size="sm" onClick={() => setFontSize(fontSize - 2)}>A-</Button>
+                <Button size="sm" onClick={() => setFontSize(fontSize + 2)}>A+</Button>
+            </div>
+
+            <div className="flex items-center space-x-2">
+                <Label htmlFor="dark-mode">Dark Mode</Label>
+                <Switch
+                    id="dark-mode"
+                    checked={theme === 'dark'}
+                    onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                />
+            </div>
 
           <Dashboard />
 
           <MedicationForm onAddMedication={handleAddMedication} />
           <MedicationList medications={medications} />
+
+            <Button onClick={toggleSpeak} disabled={!medicineInfo}>
+                {isSpeaking ? 'Stop Info' : 'Speak Info'}
+            </Button>
+            <ReminderDialog />
 
           {isLoading && <Progress />}
 
@@ -92,4 +145,3 @@ export default function Home() {
     </SidebarProvider>
   );
 }
-

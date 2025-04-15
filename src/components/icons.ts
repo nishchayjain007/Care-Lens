@@ -68,4 +68,3 @@ const Icons = {
 };
 
 export { Icons };
-
