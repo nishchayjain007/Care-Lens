@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Camera from "@/components/camera";
 import MedicineInfo from "@/components/medicine-info";
 import WebSearchLink from "@/components/web-search-link";

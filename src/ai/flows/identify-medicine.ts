@@ -9,7 +9,6 @@
 
 import {ai} from '@/ai/ai-instance';
 import {z} from 'genkit';
-import {getMedicineInfo, Medicine} from '@/services/medicine-database';
 
 const IdentifyMedicineInputSchema = z.object({
   photoUrl: z.string().describe('The URL of the scanned medicine packaging image.'),
@@ -32,6 +31,38 @@ export async function identifyMedicine(input: IdentifyMedicineInput): Promise<Id
   return identifyMedicineFlow(input);
 }
 
+const ocrExtract = ai.defineFlow(
+    {
+      name: 'ocrExtract',
+      inputSchema: z.object({
+        photoUrl: z.string().describe('The URL of the scanned medicine packaging image.'),
+      }),
+      outputSchema: z.object({
+        extractedText: z.string().describe('Text extracted from the image using OCR'),
+      }),
+    },
+    async input => {
+      try {
+        // Call the Genkit model to extract text from the image
+        const ocrResult = await ai.callModel('googleai/gemini-vision-pro', {
+          prompt: `Extract all text from this image. Respond only with the extracted text, nothing else.`,
+          input: {
+            inlineData: {
+              data: input.photoUrl,
+              mimeType: 'image/png',
+            },
+          },
+        });
+
+        // Return the extracted text
+        return { extractedText: ocrResult.output };
+      } catch (error: any) {
+        console.error("Error extracting text from image:", error);
+        return { extractedText: "Failed to extract text from the image. Please try again." };
+      }
+    }
+);
+
 const extractMedicineName = ai.defineTool(
   {
     name: 'extractMedicineName',
@@ -42,25 +73,14 @@ const extractMedicineName = ai.defineTool(
     outputSchema: z.string().describe('The extracted medicine name.'),
   },
   async input => {
-    // TODO: Implement OCR logic to extract text from the image.
-    // For now, return a placeholder medicine name.
-    // IMPORTANT: Using a consistent placeholder to prevent issues with the medicine database lookup.
-    // return 'Placeholder Medicine';
-    // Implement OCR logic here
-    // Use the AI to extract the medicine name from the image
-    // This is a placeholder, replace with actual Genkit OCR call
-    const medicineName = await ai.callModel('googleai/gemini-vision-pro', {
-      prompt: `Extract the medicine name from this image. Be very precise.
-      Respond only with the medicine name, nothing else.`,
-      input: {
-        inlineData: {
-          data: input.photoUrl,
-          mimeType: 'image/png',
-        },
-      },
-    });
-    console.log(`Extracted medicine name: ${medicineName.output}`);
-    return medicineName.output;
+    // Call ocrExtract flow to get extracted text
+    const ocrResult = await ocrExtract(input);
+    if (ocrResult.extractedText) {
+      console.log(`Extracted text: ${ocrResult.extractedText}`);
+      return ocrResult.extractedText;
+    } else {
+      return 'Placeholder Medicine';
+    }
   }
 );
 
@@ -91,18 +111,14 @@ const identifyMedicineFlow = ai.defineFlow<
   try {
     const {output: {medicineName}} = await identifyMedicinePrompt(input);
 
-    const medicineInfo: Medicine | null = await getMedicineInfo(medicineName);
-
     return {
-      medicineInfo: medicineInfo
-        ? {
-          name: medicineInfo.name,
-          dosage: medicineInfo.dosage,
-          instructions: medicineInfo.instructions,
-          sideEffects: medicineInfo.sideEffects,
-          purpose: medicineInfo.purpose,
-        }
-        : null,
+      medicineInfo: {
+        name: medicineName,
+        dosage: '',
+        instructions: '',
+        sideEffects: '',
+        purpose: '',
+      }
     };
   } catch (error: any) {
     console.error("Error identifying medicine:", error);
