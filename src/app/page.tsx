@@ -70,22 +70,81 @@ export default function Home() {
         }
     };
 
+    useEffect(() => {
+      let recognition: SpeechRecognition | null = null;
+  
+      if ('webkitSpeechRecognition' in window) {
+          const SpeechRecognition = window.webkitSpeechRecognition;
+          recognition = new SpeechRecognition();
+          recognition.continuous = false;
+          recognition.interimResults = false;
+          recognition.lang = 'en-US';
+  
+          recognition.onstart = () => {
+              setIsListening(true);
+              setChatMessage('');
+          };
+  
+          recognition.onresult = (event) => {
+              const transcript = Array.from(event.results)
+                  .map(result => result[0])
+                  .map(result => result.transcript)
+                  .join('');
+  
+              setChatMessage(transcript);
+              handleSendMessage(transcript);
+          };
+  
+          recognition.onend = () => {
+              setIsListening(false);
+          };
+  
+          recognition.onerror = (event) => {
+              console.error('Speech recognition error:', event.error);
+              setIsListening(false);
+          };
+      } else {
+          console.warn('Web Speech API is not supported in this browser.');
+      }
+  
+      const startListening = () => {
+          if (recognition) {
+              try {
+                  recognition.start();
+              } catch (error) {
+                  console.error('Error starting recognition:', error);
+                  setIsListening(false);
+              }
+          }
+      };
+  
+      const stopListening = () => {
+          if (recognition && isListening) {
+              recognition.stop();
+          }
+      };
+  
+      if (isListening && recognition) {
+          startListening();
+      } else if (recognition) {
+          stopListening();
+      }
+  
+      return () => {
+          stopListening();
+          if (recognition) {
+              recognition.onstart = null;
+              recognition.onresult = null;
+              recognition.onend = null;
+              recognition.onerror = null;
+          }
+      };
+  }, [isListening, handleSendMessage]);
+  
+
     const toggleListening = () => {
         setIsListening(prevIsListening => !prevIsListening);
     };
-
-    useEffect(() => {
-        if (isListening) {
-            // Start speech recognition
-            // For simplicity, using a placeholder function
-            startSpeechRecognition(setChatMessage, handleSendMessage, setIsListening);
-        } else {
-            // Stop speech recognition
-            stopSpeechRecognition();
-        }
-        // Cleanup function to ensure speech recognition is stopped
-        return () => stopSpeechRecognition();
-    }, [isListening]);
 
     useEffect(() => {
         return () => window.speechSynthesis.cancel(); // Cleanup on unmount
@@ -193,18 +252,4 @@ export default function Home() {
             <Toaster/>
         </SidebarProvider>
     );
-}
-
-function startSpeechRecognition(
-    setChatMessage: (message: string) => void,
-    handleSendMessage: (message: string) => void,
-    setIsListening: (isListening: boolean) => void
-) {
-    console.log('Starting speech recognition (placeholder)');
-    // Implement actual speech recognition logic here
-}
-
-function stopSpeechRecognition() {
-    console.log('Stopping speech recognition (placeholder)');
-    // Implement logic to stop speech recognition
 }
