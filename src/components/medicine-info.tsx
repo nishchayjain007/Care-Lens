@@ -6,22 +6,12 @@ interface MedicineInfoProps {
   name: string;
   dosage: string;
   instructions: string;
-  sideEffects: string;
-  purpose: string;
-  schedule: string;
-  frequency: string;
-  duration: string;
 }
 
 const MedicineInfo = ({
   name,
   dosage,
   instructions,
-  sideEffects,
-  purpose,
-  schedule,
-  frequency,
-  duration,
 }: MedicineInfoProps) => {
   return (
     <Card className="w-full">
@@ -34,22 +24,10 @@ const MedicineInfo = ({
             <strong>Name:</strong> {name}
           </p>
           <p>
-            <strong>Usage:</strong> {purpose}
-          </p>
-          <p>
             <strong>Dosage:</strong> {dosage}
           </p>
           <p>
-            <strong>Schedule:</strong> {schedule}
-          </p>
-          <p>
-            <strong>Frequency:</strong> {frequency}
-          </p>
-          <p>
-            <strong>Duration:</strong> {duration}
-          </p>
-          <p>
-            <strong>Side Effects:</strong> {sideEffects}
+            <strong>Instructions:</strong> {instructions}
           </p>
         </div>
       </CardContent>
@@ -58,3 +36,4 @@ const MedicineInfo = ({
 };
 
 export default MedicineInfo;
+
