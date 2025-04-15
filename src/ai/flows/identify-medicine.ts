@@ -41,7 +41,7 @@ const ocrExtract = ai.defineFlow(
       try {
         // Call the Genkit model to extract text from the image
         const ocrResult = await ai.callModel('googleai/gemini-vision-pro', {
-          prompt: `Carefully extract all text from this image.`,
+          prompt: `Carefully extract all text from this image. Ensure that the text is accurate and complete.`,
           input: {
             inlineData: {
               data: input.photoBase64,
@@ -63,17 +63,19 @@ const extractMedicineInformation = ai.definePrompt({
   name: 'extractMedicineInformation',
   input: {
     schema: z.object({
-      medicineName: z.string().describe('The name of the medicine.'),
+      scannedText: z.string().describe('The extracted text from the scanned image.'),
     }),
   },
   output: {
     schema: z.object({
-      medicineInfo: z.string().describe('Information about the medicine'),
+      medicineInfo: z.string().describe('Information about the medicine, including name, dosage, instructions, side effects, and purpose.'),
     }),
   },
-  prompt: `You are an expert pharmacist. A user is requesting information about the medicine: {{{medicineName}}}.
-  Use your knowledge and search the internet to extract details to be displayed on the UI such as the medicine dosage, instructions, side effects, and purpose of the medicine.
-  Return the information in a concise manner. If you cannot find specific information, state that it's unavailable.`,
+  prompt: `You are an expert pharmacist. A user has scanned text from a medicine packaging and is requesting information.
+  The scanned text is: {{{scannedText}}}.
+  Use your knowledge and search the internet to extract details to be displayed on the UI such as the medicine name, dosage, instructions, side effects, and purpose of the medicine.
+  Return the information in a concise manner. If you cannot find specific information, state that it's unavailable.
+  Focus on extracting the medicine name, dosage, and usage instructions if available.`,
 });
 
 const identifyMedicineFlow = ai.defineFlow<
@@ -89,41 +91,29 @@ const identifyMedicineFlow = ai.defineFlow<
     if (!ocrResult.extractedText) {
       return {
         medicineInfo: null,
-        error: "Could not extract text from the image. Please try again."
+        error: "Could not extract text from the image. Please try again. Ensure the image is clear and well-lit."
       };
     }
 
-    // Attempt to extract the medicine name from the extracted text
-    const extractedText = ocrResult.extractedText;
-    const medicineNameMatch = extractedText.match(/([A-Za-z]+)/); // This regex looks for the first word to be used as medicine name
-    const medicineName = medicineNameMatch ? medicineNameMatch[1].trim() : null;
-
-    if (!medicineName) {
-      return {
-        medicineInfo: null,
-        error: "Sorry, I wasn't able to extract the medicine name from the text in the image.",
-      };
-    }
-
-    const medicineInformation = await extractMedicineInformation({ medicineName: medicineName });
+    const medicineInformation = await extractMedicineInformation({ scannedText: ocrResult.extractedText });
 
     if (!medicineInformation.output?.medicineInfo) {
       return {
         medicineInfo: null,
-        error: "Could not identify medicine. Please try again."
+        error: "Could not identify medicine information. Please try again with a clearer image."
       };
     }
 
-    // Split the information into sections based on common keywords
     const medicineInfoString = medicineInformation.output.medicineInfo;
 
-    const nameMatch = medicineInfoString.match(/Name:\s*([^\n]+)/);
-    const dosageMatch = medicineInfoString.match(/Dosage:\s*([^\n]+)/);
-    const instructionsMatch = medicineInfoString.match(/Instructions:\s*([^\n]+)/);
-    const sideEffectsMatch = medicineInfoString.match(/Side Effects:\s*([^\n]+)/);
-    const purposeMatch = medicineInfoString.match(/Purpose:\s*([^\n]+)/);
+    // Improved parsing logic
+    const nameMatch = medicineInfoString.match(/Name:\s*([^\n]+)/i);
+    const dosageMatch = medicineInfoString.match(/Dosage:\s*([^\n]+)/i);
+    const instructionsMatch = medicineInfoString.match(/Instructions:\s*([^\n]+)/i);
+    const sideEffectsMatch = medicineInfoString.match(/Side Effects:\s*([^\n]+)/i);
+    const purposeMatch = medicineInfoString.match(/Purpose:\s*([^\n]+)/i);
 
-    const name = medicineName; // Use extracted medicine name
+    const name = nameMatch ? nameMatch[1].trim() : "N/A";
     const dosage = dosageMatch ? dosageMatch[1].trim() : "N/A";
     const instructions = instructionsMatch ? instructionsMatch[1].trim() : "N/A";
     const sideEffects = sideEffectsMatch ? sideEffectsMatch[1].trim() : "N/A";
@@ -142,7 +132,7 @@ const identifyMedicineFlow = ai.defineFlow<
     console.error("Error identifying medicine:", error);
     return {
       medicineInfo: null,
-      error: "Failed to identify medicine. Please try again."
+      error: "Failed to identify medicine. Please try again. Ensure the image is clear and well-lit."
     };
   }
 });
