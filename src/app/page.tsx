@@ -131,9 +131,9 @@ export default function Home() {
                             <div className="flex justify-around mt-4">
                                 <Button onClick={toggleSpeak}>
                                     {isSpeaking ? (
-                                        Stop Info
+                                        "Stop Info"
                                     ) : (
-                                        Speak Info
+                                        "Speak Info"
                                     )}
                                 </Button>
                                 <ReminderDialog/>
@@ -146,3 +146,4 @@ export default function Home() {
         </SidebarProvider>
     );
 }
+
