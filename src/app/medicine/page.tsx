@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
 const MedicineIdentificationPage = () => {
-  const [medicineInfo, setMedicineInfo] = useState<{
+  const [medicineInfo, setMedicineInfo<{
     name: string;
     dosage: string;
     instructions: string;
@@ -32,31 +32,31 @@ const MedicineIdentificationPage = () => {
     setIsLoading(true);
     setErrorMessage(null);
 
-    // Mock OCR data
-    const mockOcrData = {
-      name: "Digene",
-      usage: "Used for digestion and acidity",
-      dosage: "2 teaspoons",
-      schedule: "After meals",
-      frequency: "2 times a day",
-      duration: "5 days",
-      sideEffects: "Constipation, chalky taste",
-    };
+    try {
+      const result = await identifyMedicine({ photoUrl: imageSrc });
 
-    // Mock setting medicine info based on OCR (replace with actual OCR logic later)
-    setTimeout(() => {
-      setMedicineInfo({
-        name: mockOcrData.name,
-        dosage: mockOcrData.dosage,
-        instructions: mockOcrData.usage, // Using 'usage' for instructions
-        sideEffects: mockOcrData.sideEffects,
-        purpose: mockOcrData.usage, // Using 'usage' for purpose
-        schedule: mockOcrData.schedule,
-        frequency: mockOcrData.frequency,
-        duration: mockOcrData.duration,
-      });
+      if (result.medicineInfo) {
+        setMedicineInfo({
+          name: result.medicineInfo.name,
+          dosage: result.medicineInfo.dosage,
+          instructions: result.medicineInfo.instructions,
+          sideEffects: result.medicineInfo.sideEffects,
+          purpose: result.medicineInfo.purpose,
+          schedule: "",
+          frequency: "",
+          duration: "",
+        });
+      } else if (result.error) {
+        setErrorMessage(result.error);
+      } else {
+        setErrorMessage("Could not identify medicine. Please try again.");
+      }
+    } catch (error: any) {
+      console.error("Error identifying medicine:", error);
+      setErrorMessage("Failed to identify medicine. Please try again.");
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (
