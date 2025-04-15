@@ -28,7 +28,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useTheme } from 'next-themes';
 import { Separator } from "@/components/ui/separator";
-import { ReminderDialog } from "@/components/reminder-dialog";
+import ReminderDialog from "@/components/reminder-dialog";
 
 // Dummy data for the medication list
 const dummyMedications = [
