@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/toaster";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import WebSearchLink from "@/components/web-search-link";
 import SOSButton from "@/components/sos-button";
@@ -17,14 +18,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { useTheme } from 'next-themes';
 import { Separator } from "@/components/ui/separator";
 import { MicrophoneAnimation } from "@/components/microphone-animation";
 import {chatCompanion} from "@/ai/flows/chat-companion-flow";
 import ReminderDialog from "@/components/reminder-dialog";
-import { useToast } from "@/hooks/use-toast";
-import { SidebarProvider } from "@/components/ui/sidebar";
 import {Textarea} from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
 // Dummy data for the medication list
 const dummyMedications = [
@@ -75,10 +76,14 @@ export default function Home() {
 
     useEffect(() => {
         if (isListening) {
+            // Start speech recognition
+            // For simplicity, using a placeholder function
             startSpeechRecognition(setChatMessage, handleSendMessage, setIsListening);
         } else {
+            // Stop speech recognition
             stopSpeechRecognition();
         }
+        // Cleanup function to ensure speech recognition is stopped
         return () => stopSpeechRecognition();
     }, [isListening]);
 
@@ -97,6 +102,7 @@ export default function Home() {
                         <CardHeader>
                             <CardTitle>
                                 Care Lens+
+                                <br/>
                                 Your AI Powered Care Assistant
                             </CardTitle>
                             <CardContent className="flex flex-col space-y-4">
@@ -138,54 +144,53 @@ export default function Home() {
                                                 {isListening && <MicrophoneAnimation />}
                                             </Button>
                                         </div>
-+                                      <Textarea
-+                                          value={chatMessage}
-+                                          onChange={(e) => setChatMessage(e.target.value)}
-+                                          placeholder="Enter your message here..."
-+                                          className="resize-none"
-+                                      />
-                                         <Button onClick={() => handleSendMessage()} disabled={isLoading}>
-                                             {isLoading ? "Sending..." : "Send"}
-                                         </Button>
-                                         {chatResponse && (
-                                             <div className="mt-2 p-3 rounded-md bg-secondary text-secondary-foreground">
-                                                 {chatResponse}
-                                             </div>
-                                         )}
-                                     </CardContent>
-                                 </Card>
+                                        <Textarea
+                                            value={chatMessage}
+                                            onChange={(e) => setChatMessage(e.target.value)}
+                                            placeholder="Enter your message here..."
+                                            className="resize-none"
+                                        />
+                                        <Button onClick={() => handleSendMessage()} disabled={isLoading}>
+                                            {isLoading ? "Sending..." : "Send"}
+                                        </Button>
+                                        {chatResponse && (
+                                            <div className="mt-2 p-3 rounded-md bg-secondary text-secondary-foreground">
+                                                {chatResponse}
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
 
-                                 {medicineInfo && (
-                                     
-                                         <MedicineInfo
-                                             name={medicineInfo.name}
-                                             dosage={medicineInfo.dosage}
-                                             instructions={medicineInfo.instructions}
-                                         />
-                                         <div className="flex justify-around mt-4">
-                                             <WebSearchLink medicineName={medicineInfo.name} />
-                                             <SOSButton />
-                                         </div>
+                                {medicineInfo && (
+                                    <Card className="w-full max-w-md">
+                                        <MedicineInfo
+                                            name={medicineInfo.name}
+                                            dosage={medicineInfo.dosage}
+                                            instructions={medicineInfo.instructions}
+                                        />
+                                        <div className="flex justify-around mt-4">
+                                            <WebSearchLink medicineName={medicineInfo.name} />
+                                            <SOSButton />
+                                        </div>
 
-                                         <div className="flex justify-around mt-4">
-                                             <Button onClick={toggleSpeak}>
-                                                 {isSpeaking ? (
-                                                     "Stop Info"
-                                                 ) : (
-                                                     "Speak Info"
-                                                 )}
-                                             </Button>
-                                             <ReminderDialog />
-                                         </div>
-                                     
-                                 )}
+                                        <div className="flex justify-around mt-4">
+                                            <Button onClick={toggleSpeak}>
+                                                {isSpeaking ? (
+                                                    "Stop Info"
+                                                ) : (
+                                                    "Speak Info"
+                                                )}
+                                            </Button>
+                                            <ReminderDialog />
+                                        </div>
+                                    </Card>
+                                )}
                             </CardContent>
                         </CardHeader>
                     </Card>
                 </main>
             </div>
-            
-            
+            <Toaster/>
         </SidebarProvider>
     );
 }
