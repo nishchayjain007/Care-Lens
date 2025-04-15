@@ -15,18 +15,13 @@ interface MedicineDetails {
   name: string;
   dosage: string;
   instructions: string;
-  sideEffects: string;
-  purpose: string;
-  schedule: string;
-  frequency: string;
-  duration: string;
 }
 
 const MedicineIdentificationPage = () => {
-  const [medicineInfo, setMedicineInfo] = useState<MedicineDetails | null>(null);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [medicineInfo, setMedicineInfo<MedicineDetails | null>(null);
+  const [capturedImage, setCapturedImage<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage<string | null>(null);
 
   const handleImageCapture = async (imageSrc: string) => {
     setCapturedImage(imageSrc);
@@ -37,16 +32,11 @@ const MedicineIdentificationPage = () => {
     try {
       const result = await identifyMedicine({ photoBase64: imageSrc });
 
-      if (result.medicineInfo) {
+      if (result.name !== "N/A") {
         setMedicineInfo({
-          name: result.medicineInfo.name,
-          dosage: result.medicineInfo.dosage,
-          instructions: result.medicineInfo.instructions,
-          sideEffects: result.medicineInfo.sideEffects,
-          purpose: result.medicineInfo.purpose,
-          schedule: "",
-          frequency: "",
-          duration: "",
+          name: result.name,
+          dosage: result.dosage,
+          instructions: result.instructions,
         });
       } else if (result.error) {
         setErrorMessage(result.error);
@@ -103,11 +93,6 @@ const MedicineIdentificationPage = () => {
             name={medicineInfo.name}
             dosage={medicineInfo.dosage}
             instructions={medicineInfo.instructions}
-            sideEffects={medicineInfo.sideEffects}
-            purpose={medicineInfo.purpose}
-            schedule={medicineInfo.schedule}
-            frequency={medicineInfo.frequency}
-            duration={medicineInfo.duration}
           />
           <div className="flex justify-around mt-4">
             <WebSearchLink medicineName={medicineInfo.name} />
@@ -120,13 +105,8 @@ const MedicineIdentificationPage = () => {
             name="N/A"
             dosage="N/A"
             instructions="N/A"
-            sideEffects="N/A"
-            purpose="N/A"
-            schedule="N/A"
-            frequency="N/A"
-            duration="N/A"
           />
-           <div className="flex justify-around mt-4">
+          <div className="flex justify-around mt-4">
             <WebSearchLink medicineName={"Unknown Medicine"} />
             <SOSButton />
           </div>

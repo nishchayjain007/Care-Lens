@@ -36,4 +36,3 @@ const MedicineInfo = ({
 };
 
 export default MedicineInfo;
-
