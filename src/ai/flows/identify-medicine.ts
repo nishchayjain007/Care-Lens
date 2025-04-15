@@ -59,11 +59,11 @@ const ocrExtract = ai.defineFlow(
     }
 );
 
-const identifyMedicinePrompt = ai.definePrompt({
-  name: 'identifyMedicinePrompt',
+const extractMedicineInformation = ai.definePrompt({
+  name: 'extractMedicineInformation',
   input: {
     schema: z.object({
-      extractedText: z.string().describe('The extracted text from the image.'),
+      medicineName: z.string().describe('The name of the medicine.'),
     }),
   },
   output: {
@@ -71,10 +71,9 @@ const identifyMedicinePrompt = ai.definePrompt({
       medicineInfo: z.string().describe('Information about the medicine'),
     }),
   },
-  prompt: `You are an expert pharmacist.
-  A user has scanned a medicine packaging. The extracted text from the image is at {{{extractedText}}}.
-  Analyze the text and use your knowledge to extract details to be displayed on the UI such as the medicine name, dosage, instructions, side effects, and purpose of the medicine.
-  Return the information in a concise manner. If you cannot find the medicine name please state that you cannot identify it.`,
+  prompt: `You are an expert pharmacist. A user is requesting information about the medicine: {{{medicineName}}}.
+  Use your knowledge and search the internet to extract details to be displayed on the UI such as the medicine dosage, instructions, side effects, and purpose of the medicine.
+  Return the information in a concise manner. If you cannot find specific information, state that it's unavailable.`,
 });
 
 const identifyMedicineFlow = ai.defineFlow<
@@ -94,7 +93,19 @@ const identifyMedicineFlow = ai.defineFlow<
       };
     }
 
-    const medicineInformation = await identifyMedicinePrompt({extractedText: ocrResult.extractedText});
+    // Attempt to extract the medicine name from the extracted text
+    const extractedText = ocrResult.extractedText;
+    const medicineNameMatch = extractedText.match(/([A-Za-z]+)/); // This regex looks for the first word to be used as medicine name
+    const medicineName = medicineNameMatch ? medicineNameMatch[1].trim() : null;
+
+    if (!medicineName) {
+      return {
+        medicineInfo: null,
+        error: "Sorry, I wasn't able to extract the medicine name from the text in the image.",
+      };
+    }
+
+    const medicineInformation = await extractMedicineInformation({ medicineName: medicineName });
 
     if (!medicineInformation.output?.medicineInfo) {
       return {
@@ -112,7 +123,7 @@ const identifyMedicineFlow = ai.defineFlow<
     const sideEffectsMatch = medicineInfoString.match(/Side Effects:\s*([^\n]+)/);
     const purposeMatch = medicineInfoString.match(/Purpose:\s*([^\n]+)/);
 
-    const name = nameMatch ? nameMatch[1].trim() : "N/A";
+    const name = medicineName; // Use extracted medicine name
     const dosage = dosageMatch ? dosageMatch[1].trim() : "N/A";
     const instructions = instructionsMatch ? instructionsMatch[1].trim() : "N/A";
     const sideEffects = sideEffectsMatch ? sideEffectsMatch[1].trim() : "N/A";
