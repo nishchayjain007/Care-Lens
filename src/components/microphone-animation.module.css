@@ -1,3 +1,4 @@
+
 .micAnimationContainer {
     display: flex;
     justify-content: center;
@@ -20,7 +21,7 @@
     transform: translate(-50%, -50%);
     width: 20px;
     height: 30px;
-    background-color: hsl(var(--primary)); /* Calming blue */
+    background-color: hsl(var(--primary)); /* Electric green */
     border-radius: 50% / 20%;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
@@ -33,7 +34,7 @@
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background-color:  hsl(var(--accent));  /* Teal */
+    background-color:  hsl(var(--accent));  /* Bright Cyan */
     opacity: 0;
     animation-duration: 2s;
     animation-timing-function: linear;
