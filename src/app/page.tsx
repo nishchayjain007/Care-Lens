@@ -76,6 +76,10 @@ export default function Home() {
     setMedications([...medications, newMedication]);
   };
 
+  const toggleThemeMode = () => {
+    setTheme(theme === 'light' ? 'dark' : 'light');
+  };
+
   return (
     <SidebarProvider>
       <div className="flex h-screen">
@@ -110,7 +114,7 @@ export default function Home() {
           </div>
 
           <div className="flex space-x-2">
-            <Button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+            <Button onClick={toggleThemeMode}>
               {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
             </Button>
             <Button onClick={() => setFontSize(fontSize + 2)}>A+</Button>
