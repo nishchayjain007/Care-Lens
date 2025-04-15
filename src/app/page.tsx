@@ -12,9 +12,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Icons } from "@/components/icons";
 import { useRouter } from 'next/navigation';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
 } from "@/components/ui/popover"
 import { Progress } from "@/components/ui/progress";
 import { MicrophoneAnimation } from "@/components/microphone-animation";
@@ -31,108 +31,99 @@ import ReminderDialog from "@/components/reminder-dialog";
 
 // Dummy data for the medication list
 const dummyMedications = [
-  { id: 1, name: "Aspirin", dosage: "100mg", schedule: "Daily" },
-  { id: 2, name: "Lipitor", dosage: "20mg", schedule: "Evening" },
+    { id: 1, name: "Aspirin", dosage: "100mg", schedule: "Daily" },
+    { id: 2, name: "Lipitor", dosage: "20mg", schedule: "Evening" },
 ];
 
 export default function Home() {
-  const [medicineInfo, setMedicineInfo] = useState(null);
-  const [isListening, setIsListening] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  const router = useRouter();
-  const { theme, setTheme } = useTheme();
-  const [fontSize, setFontSize] = useState(16); // Default font size
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [medications, setMedications] = useState(dummyMedications);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [hasCameraPermission, setHasCameraPermission] = useState(false);
+    const [medicineInfo, setMedicineInfo] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const { toast } = useToast();
+    const router = useRouter();
+    const { theme, setTheme } = useTheme();
+    const [fontSize, setFontSize] = useState(16);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [capturedImage, setCapturedImage] = useState<string | null>(null);
+    const [medications, setMedications] = useState(dummyMedications);
+    const [isSpeaking, setIsSpeaking] = useState(false);
+    const [hasCameraPermission, setHasCameraPermission] = useState(false);
 
-  const toggleSpeak = () => {
-    const message = medicineInfo
-      ? `Medicine Name: ${medicineInfo.name}, Usage: ${medicineInfo.purpose}, Dosage: ${medicineInfo.dosage}, Schedule: ${medicineInfo.schedule}, Frequency: ${medicineInfo.frequency}, Duration: ${medicineInfo.duration}, Side Effects: ${medicineInfo.sideEffects}`
-      : 'No medicine information available.';
+    const toggleSpeak = () => {
+        const message = medicineInfo
+            ? `Medicine Name: ${medicineInfo.name}, Usage: ${medicineInfo.purpose}, Dosage: ${medicineInfo.dosage}, Schedule: ${medicineInfo.schedule}, Frequency: ${medicineInfo.frequency}, Duration: ${medicineInfo.duration}, Side Effects: ${medicineInfo.sideEffects}`
+            : 'No medicine information available.';
 
-    if (window.speechSynthesis.speaking) {
-      window.speechSynthesis.cancel();
-    } else {
-      const utterance = new SpeechSynthesisUtterance(message);
-      window.speechSynthesis.speak(utterance)
-    }
+        if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+        } else {
+            const utterance = new SpeechSynthesisUtterance(message);
+            window.speechSynthesis.speak(utterance)
+        }
 
-    setIsSpeaking(!isSpeaking);
-  };
+        setIsSpeaking(!isSpeaking);
+    };
 
-  useEffect(() => {
-    return () => window.speechSynthesis.cancel(); // Cleanup on unmount
-  }, []);
-  const toggleListening = () => {
-    setIsListening(prevIsListening => !prevIsListening);
-  };
+    useEffect(() => {
+        return () => window.speechSynthesis.cancel(); // Cleanup on unmount
+    }, []);
 
-  const handleAddMedication = (newMedication: any) => {
-    setMedications([...medications, newMedication]);
-  };
 
-  const toggleThemeMode = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
-  };
+    const handleAddMedication = (newMedication: any) => {
+        setMedications([...medications, newMedication]);
+    };
 
-  return (
-    <SidebarProvider>
-      <div className="flex h-screen">
-        <main className="flex-1 p-4 flex flex-col items-center space-y-4"
-          style={{
-            fontSize: `${fontSize}px`,
-          }}>
+    const toggleThemeMode = () => {
+        setTheme(theme === 'light' ? 'dark' : 'light');
+    };
 
-          <div className="flex justify-end w-full">
-            <Button onClick={toggleListening}>
-              {isListening ? 'Stop Listening' : 'Start Listening'}
-              {isListening && <MicrophoneAnimation />}
-            </Button>
-          </div>
+    return (
+        <SidebarProvider>
+            <div className="flex h-screen">
+                <main className="flex-1 p-2 sm:p-4 flex flex-col items-center space-y-2 sm:space-y-4"
+                    style={{
+                        fontSize: `${fontSize}px`,
+                    }}>
 
-          <Card className="w-full max-w-md">
-            <CardHeader>
-              <CardTitle className="text-lg">Welcome to Care Lens+</CardTitle>
-              <CardContent>Your AI Powered Care Assistant</CardContent>
-            </CardHeader>
-          </Card>
+                    <Card className="w-full max-w-md">
+                        <CardHeader>
+                            <CardTitle className="text-lg">Welcome to Care Lens+</CardTitle>
+                            <CardContent>Your AI Powered Care Assistant</CardContent>
+                        </CardHeader>
+                    </Card>
 
-          <div className="flex space-x-2">
-            <Button onClick={() => router.push('/medicine')}>
-              <Icons.camera className="mr-2 h-4 w-4" />
-              Identify Medicine
-            </Button>
+                    <div className="flex flex-wrap justify-center gap-2">
+                        <Button onClick={() => router.push('/medicine')}>
+                            <Icons.camera className="mr-2 h-4 w-4" />
+                            Identify Medicine
+                        </Button>
 
-            <Button onClick={() => router.push('/scanned-medicines')}>
-              View Scanned Medicines
-            </Button>
-          </div>
+                        <Button onClick={() => router.push('/scanned-medicines')}>
+                            View Scanned Medicines
+                        </Button>
+                    </div>
 
-          <div className="flex space-x-2">
-            <Button onClick={toggleThemeMode}>
-              {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-            </Button>
-            <Button onClick={() => setFontSize(fontSize + 2)}>A+</Button>
-            <Button onClick={() => setFontSize(fontSize - 2)}>A-</Button>
-          </div>
+                    <div className="flex flex-wrap justify-center gap-2">
+                        <Button onClick={toggleThemeMode}>
+                            {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+                        </Button>
+                        <Button onClick={() => setFontSize(fontSize + 2)}>A+</Button>
+                        <Button onClick={() => setFontSize(fontSize - 2)}>A-</Button>
+                    </div>
 
-          <MedicationForm onAddMedication={handleAddMedication} />
-          <MedicationList medications={medications} />
-          <Button onClick={toggleSpeak}>
-            {isSpeaking ? 'Stop Info' : 'Speak Info'}
-          </Button>
-          <ReminderDialog />
+                    <MedicationForm onAddMedication={handleAddMedication} />
+                    <MedicationList medications={medications} />
+                    <Button onClick={toggleSpeak}>
+                        {isSpeaking ? 'Stop Info' : 'Speak Info'}
+                    </Button>
+                    <ReminderDialog />
 
-          <ChatCompanion />
+                    <ChatCompanion />
 
-        </main>
-        <Toaster />
-      </div>
-    </SidebarProvider>
-  );
+                </main>
+                <Toaster />
+            </div>
+        </SidebarProvider>
+    );
 }
+
