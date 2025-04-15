@@ -1,10 +1,6 @@
 'use server';
 /**
  * @fileOverview Identifies medicine from a scanned image and retrieves its information.
- *
- * - identifyMedicine - A function that handles the medicine identification process.
- * - IdentifyMedicineInput - The input type for the identifyMedicine function.
- * - IdentifyMedicineOutput - The return type for the identifyMedicine function.
  */
 
 import {ai} from '@/ai/ai-instance';
@@ -102,8 +98,8 @@ const medicineInfoPrompt = ai.definePrompt({
     }),
   },
   prompt: `You are an expert pharmacist. A user has identified a medicine with the name {{{medicineName}}}.
-Provide the dosage, instructions, side effects, and purpose of this medicine.
-Ensure the information is accurate and concise.`,
+  Search for information about this medicine, focusing on dosage, instructions, side effects, and purpose.
+  Ensure the information is accurate and concise.`,
 });
 
 const identifyMedicinePrompt = ai.definePrompt({
