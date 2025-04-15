@@ -1,7 +1,7 @@
 "use client";
 
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { Toaster, useToast } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/toaster";
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import WebSearchLink from "@/components/web-search-link";
@@ -28,6 +28,7 @@ import Dashboard from "@/components/dashboard";
 import { MedicationReminderAgent } from "@/components/medication-reminder-agent";
 import { SafetyAgent } from "@/components/safety-agent";
 import { Textarea } from "@/components/ui/textarea";
+import {useToast} from "@/hooks/use-toast";
 
 
 // Dummy data for the medication list
@@ -74,6 +75,38 @@ export default function Home() {
         setIsSpeaking(!isSpeaking);
     };
 
+    const handleSendMessage = async (msg: string = chatMessage) => {
+        setIsLoading(true);
+        try {
+            const result = await chatCompanion({ message: msg });
+            setChatResponse(result.response);
+        } catch (error) {
+            console.error("Error during chat:", error);
+            setChatResponse("Sorry, I couldn't process your message. Please try again.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const toggleListening = () => {
+        setIsListening(prevIsListening => !prevIsListening);
+    };
+
+    useEffect(() => {
+        if (isListening) {
+            // Start speech recognition
+            // For simplicity, using a placeholder function
+            startSpeechRecognition(setChatMessage, handleSendMessage, setIsListening);
+        } else {
+            // Stop speech recognition
+            stopSpeechRecognition();
+        }
+        // Cleanup function to ensure speech recognition is stopped
+        return () => stopSpeechRecognition();
+    }, [isListening]);
+
+
+
     useEffect(() => {
         return () => window.speechSynthesis.cancel(); // Cleanup on unmount
     }, []);
@@ -82,9 +115,9 @@ export default function Home() {
         <SidebarProvider>
             <div className="flex h-screen">
                 <main className="flex-1 p-4 flex flex-col items-center space-y-4"
-                      style={{
-                          fontSize: `${fontSize}px`,
-                      }}>
+                    style={{
+                        fontSize: `${fontSize}px`,
+                    }}>
                     <Card className="w-full max-w-md">
                         <CardHeader>
                             <CardTitle>
@@ -174,9 +207,26 @@ export default function Home() {
                             </CardContent>
                         </CardHeader>
                     </Card>
+                      <Dashboard/>
                 </main>
             </div>
             <Toaster />
         </SidebarProvider>
     );
 }
+
+function startSpeechRecognition(
+    setChatMessage: (message: string) => void,
+    handleSendMessage: (message: string) => void,
+    setIsListening: (isListening: boolean) => void
+) {
+    console.log('Starting speech recognition (placeholder)');
+    // Implement actual speech recognition logic here
+}
+
+function stopSpeechRecognition() {
+    console.log('Stopping speech recognition (placeholder)');
+    // Implement logic to stop speech recognition
+}
+
+
