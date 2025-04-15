@@ -26,7 +26,9 @@ import {chatCompanion} from "@/ai/flows/chat-companion-flow";
 import ReminderDialog from "@/components/reminder-dialog";
 import {Textarea} from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-
+import Dashboard from "@/components/dashboard";
+import { MedicationReminderAgent } from "@/components/medication-reminder-agent";
+import { SafetyAgent } from "@/components/safety-agent";
 
 // Dummy data for the medication list
 const dummyMedications = [
@@ -46,14 +48,14 @@ export default function Home() {
     const { setTheme, theme } = useTheme();
     const [fontSize, setFontSize] = useState(16);
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [capturedImage, setCapturedImage] = useState<string | null>(null);
-    const [isListening, setIsListening] = useState(false);
-    const [medications, setMedications] = useState(dummyMedications);
-    const [isSpeaking, setIsSpeaking] = useState(false);
-    const [isSpeakingChatResponse, setIsSpeakingChatResponse] = useState(false);
-    const [chatResponse, setChatResponse] = useState('');
-    const [chatMessage, setChatMessage] = useState('');
-    const [hasCameraPermission, setHasCameraPermission] = useState(false);
+     const [capturedImage, setCapturedImage] = useState<string | null>(null);
+     const [isListening, setIsListening] = useState(false);
+     const [medications, setMedications] = useState(dummyMedications);
+     const [isSpeaking, setIsSpeaking] = useState(false);
+     const [isSpeakingChatResponse, setIsSpeakingChatResponse] = useState(false);
+     const [chatResponse, setChatResponse] = useState('');
+     const [chatMessage, setChatMessage] = useState('');
+     const [hasCameraPermission, setHasCameraPermission] = useState(false);
 
     const toggleSpeak = () => {
         if ('speechSynthesis' in window) {
@@ -72,15 +74,10 @@ export default function Home() {
         setIsSpeaking(!isSpeaking);
     };
 
-    const toggleSpeakChatResponse = () => {
-        setIsSpeakingChatResponse(!isSpeakingChatResponse);
-        speak(chatResponse);
-    };
-
     const handleSendMessage = async (msg: string = chatMessage) => {
         setIsLoading(true);
         try {
-            const result = await chatCompanion({message: msg});
+            const result = await chatCompanion({ message: msg });
             setChatResponse(result.response);
         } catch (error) {
             console.error("Error during chat:", error);
@@ -90,7 +87,7 @@ export default function Home() {
         }
     };
 
-    const speak = (text: string) => {
+   const speak = (text: string) => {
         if ('speechSynthesis' in window) {
             const utterance = new SpeechSynthesisUtterance(text);
             window.speechSynthesis.speak(utterance);
@@ -104,6 +101,10 @@ export default function Home() {
             toast({title: 'Speech synthesis not supported', description: 'Your browser does not support text to speech.'});
             setIsSpeakingChatResponse(false);
         }
+    };
+
+    const toggleListening = () => {
+        setIsListening(prevIsListening => !prevIsListening);
     };
 
     useEffect(() => {
@@ -127,7 +128,7 @@ export default function Home() {
                     .join('');
 
                 setChatMessage(transcript);
-                handleSendMessage(transcript);
+                 handleSendMessage(transcript);
             };
 
             recognition.onend = () => {
@@ -174,11 +175,6 @@ export default function Home() {
         };
     }, [isListening]);
 
-    const toggleListening = () => {
-        setIsListening(prevIsListening => !prevIsListening);
-    };
-
-
     useEffect(() => {
         return () => window.speechSynthesis.cancel(); // Cleanup on unmount
     }, []);
@@ -187,16 +183,23 @@ export default function Home() {
         <SidebarProvider>
             <div className="flex h-screen">
                 <main className="flex-1 p-4 flex flex-col items-center space-y-4"
-                      style={{
-                          fontSize: `${fontSize}px`,
-                      }}>
+                    style={{
+                        fontSize: `${fontSize}px`,
+                    }}>
                     <Card className="w-full max-w-md">
                         <CardHeader>
                             <CardTitle>
                                 Care Lens+
                                 Your AI Powered Care Assistant
                             </CardTitle>
-                            <CardContent className="flex flex-col space-y-4">
+                        </CardHeader>
+                        <CardContent className="flex flex-col space-y-4">
+                                 <Dashboard />
+
+                                 <MedicationReminderAgent medications={medications} />
+
+                                  <SafetyAgent />
+
                                 <div className="flex space-x-2">
                                     <Button onClick={() => router.push('/medicine')}>
                                         <Icons.camera className="mr-2 h-4 w-4" />
@@ -249,60 +252,28 @@ export default function Home() {
                                                 {chatResponse}
                                             </div>
                                         )}
-                                        <Button onClick={toggleSpeakChatResponse} disabled={isLoading}>
-                                            {isSpeakingChatResponse ? (
-                                                "Stop Speaking"
-                                            ) : "Speak Info"}
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-
-                                {medicineInfo && (
-                                    <Card className="w-full max-w-md">
-                                        <MedicineInfo
-                                            name={medicineInfo.name}
-                                            dosage={medicineInfo.dosage}
-                                            instructions={medicineInfo.instructions}
-                                        />
-                                        <div className="flex justify-around mt-4">
-                                            <WebSearchLink medicineName={medicineInfo.name} />
-                                            <SOSButton />
-                                        </div>
-
-                                        <div className="flex justify-around mt-4">
-                                            <Button onClick={toggleSpeak}>
-                                                {isSpeaking ? (
-                                                    "Stop Info"
-                                                ) : (
-                                                    "Speak Info"
-                                                )}
-                                            </Button>
-                                            <ReminderDialog />
-                                        </div>
-                                    </Card>
-                                )}
-                            </CardContent>
-                        </CardHeader>
-                    </Card>
-                </main>
-            </div>
-            <Toaster/>
-        </SidebarProvider>
-    );
-}
-
-function startSpeechRecognition(
-    setChatMessage: (message: string) => void,
-    handleSendMessage: (message: string) => void,
-    setIsListening: (isListening: boolean) => void
-) {
-    console.log('Starting speech recognition (placeholder)');
-    // Implement actual speech recognition logic here
-}
-
-function stopSpeechRecognition() {
-    console.log('Stopping speech recognition (placeholder)');
-    // Implement logic to stop speech recognition
-}
-
-
++                                          <Button onClick={toggleSpeakChatResponse} disabled={isLoading}>
++                                            {isSpeakingChatResponse ? (
++                                                "Stop Speaking"
++                                            ) : "Speak Info"}
++                                        </Button>
+                                     </CardContent>
+                                 </Card>
+ 
+                                 {medicineInfo && (
+                                     <Card className="w-full max-w-md">
+                                         <MedicineInfo
+                                             name={medicineInfo.name}
+                                             dosage={medicineInfo.dosage}
+                                             instructions={medicineInfo.instructions}
+                                         />
+                                         <div className="flex justify-around mt-4">
+                                             <WebSearchLink medicineName={medicineInfo.name} />
+                                             <SOSButton />
+                                         </div>
+@@ -270,3 +312,4 @@
+     );
+ }
+ 
++
++
