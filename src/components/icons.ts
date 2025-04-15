@@ -11,7 +11,6 @@ import {
   Home,
   Loader2,
   Mail,
-  MessageSquare,
   Moon,
   Plus,
   PlusCircle,
@@ -50,7 +49,7 @@ const Icons = {
   light: Sun,
   loader: Loader2,
   mail: Mail,
-  messageSquare: MessageSquare,
+  messageCircle: MessageCircle,
   plus: Plus,
   plusCircle: PlusCircle,
   search: Search,
@@ -63,10 +62,10 @@ const Icons = {
   user: User,
   camera: Camera,
   bell: Bell,
-  phone: PhoneCall,
+  phoneCall: PhoneCall,
   listChecks: ListChecks,
   barChart: BarChart,
-  messageCircle: MessageCircle
 };
 
 export { Icons };
+

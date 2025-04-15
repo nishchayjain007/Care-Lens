@@ -11,7 +11,7 @@ const SOSButton = () => {
 
     return (
         <Button onClick={handleSOS} variant="destructive">
-            <Icons.phone className="mr-2 h-4 w-4" />
+            <Icons.phoneCall className="mr-2 h-4 w-4" />
             Emergency SOS
         </Button>
     );

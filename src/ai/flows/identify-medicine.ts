@@ -24,6 +24,7 @@ const IdentifyMedicineOutputSchema = z.object({
     sideEffects: z.string().describe('Potential side effects, e.g., "Drowsiness".'),
     purpose: z.string().describe('The purpose of the medicine, e.g., "For pain relief".'),
   })).describe('Information about the identified medicine, or null if not found.'),
+  error: z.string().optional().describe('Error message if medicine identification fails.')
 });
 export type IdentifyMedicineOutput = z.infer<typeof IdentifyMedicineOutputSchema>;
 
@@ -43,7 +44,8 @@ const extractMedicineName = ai.defineTool(
   async input => {
     // TODO: Implement OCR logic to extract text from the image.
     // For now, return a placeholder medicine name.
-    return 'Example Medicine';
+    // IMPORTANT: Using a consistent placeholder to prevent issues with the medicine database lookup.
+    return 'Placeholder Medicine';
   }
 );
 
@@ -71,19 +73,27 @@ const identifyMedicineFlow = ai.defineFlow<
   inputSchema: IdentifyMedicineInputSchema,
   outputSchema: IdentifyMedicineOutputSchema,
 }, async input => {
-  const {output: {medicineName}} = await identifyMedicinePrompt(input);
+  try {
+    const {output: {medicineName}} = await identifyMedicinePrompt(input);
 
-  const medicineInfo: Medicine | null = await getMedicineInfo(medicineName);
+    const medicineInfo: Medicine | null = await getMedicineInfo(medicineName);
 
-  return {
-    medicineInfo: medicineInfo
-      ? {
-        name: medicineInfo.name,
-        dosage: medicineInfo.dosage,
-        instructions: medicineInfo.instructions,
-        sideEffects: medicineInfo.sideEffects,
-        purpose: medicineInfo.purpose,
-      }
-      : null,
-  };
+    return {
+      medicineInfo: medicineInfo
+        ? {
+          name: medicineInfo.name,
+          dosage: medicineInfo.dosage,
+          instructions: medicineInfo.instructions,
+          sideEffects: medicineInfo.sideEffects,
+          purpose: medicineInfo.purpose,
+        }
+        : null,
+    };
+  } catch (error: any) {
+    console.error("Error identifying medicine:", error);
+    return {
+      medicineInfo: null,
+      error: "Failed to identify medicine. Please try again."
+    };
+  }
 });

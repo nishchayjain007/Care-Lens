@@ -2,83 +2,71 @@
 
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/toaster";
-import Camera from "@/components/ui/camera";
+import { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
 import MedicineInfo from "@/components/medicine-info";
-import ReminderDialog from "@/components/reminder-dialog";
 import WebSearchLink from "@/components/web-search-link";
 import SOSButton from "@/components/sos-button";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import Dashboard from "@/components/dashboard";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Icons } from "@/components/icons";
+import { useRouter } from 'next/navigation';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Progress } from "@/components/ui/progress";
+import { VoiceCommandAgent } from "@/components/voice-command-agent";
+import { MicrophoneAnimation } from "@/components/microphone-animation";
+import { ChatCompanion } from "@/components/chat-companion";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [medicineInfo, setMedicineInfo] = useState(null);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-
-  const handleImageCapture = (imageSrc: string) => {
-    setCapturedImage(imageSrc);
-    // TODO: Implement logic to send image to GenAI for medicine identification
-    // For now, setting dummy medicine info
-    setMedicineInfo({
-      name: "Example Medicine",
-      dosage: "Take one tablet daily",
-      instructions: "Take with food",
-      sideEffects: "Drowsiness",
-      purpose: "For pain relief",
-    });
-  };
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
 
   return (
     <SidebarProvider>
       <div className="flex h-screen">
-        {/* Sidebar Content Goes Here */}
-        <main className="flex-1 p-4 flex flex-col items-center">
-          {/* Main Content */}
-          <h1>Welcome to PillPal</h1>
-          <p>Your personal medication companion.</p>
+        <main className="flex-1 p-4 flex flex-col items-center space-y-4">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="text-lg">Welcome to PillPal</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Your personal medication companion.</p>
+            </CardContent>
+          </Card>
 
-          <Dashboard />
-          {capturedImage ? (
-            <div className="mt-4">
-              <img src={capturedImage} alt="Scanned Medicine" className="max-w-md" />
-              {medicineInfo && (
-                <div className="mt-4">
-                  <MedicineInfo
-                    name={medicineInfo.name}
-                    dosage={medicineInfo.dosage}
-                    instructions={medicineInfo.instructions}
-                    sideEffects={medicineInfo.sideEffects}
-                    purpose={medicineInfo.purpose}
-                  />
-                  <div className="flex justify-around mt-4">
-                    <ReminderDialog />
-                    <WebSearchLink medicineName={medicineInfo.name} />
-                    <SOSButton />
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="mt-4">
-              <Camera onCapture={handleImageCapture} />
+          <Button onClick={() => router.push('/medicine')}>
+            <Icons.camera className="mr-2 h-4 w-4" />
+            Identify Medicine
+          </Button>
+
+          {isLoading && <Progress />}
+
+          {medicineInfo && (
+            <div className="mt-4 w-full max-w-md">
+              <MedicineInfo
+                name={medicineInfo.name}
+                dosage={medicineInfo.dosage}
+                instructions={medicineInfo.instructions}
+                sideEffects={medicineInfo.sideEffects}
+                purpose={medicineInfo.purpose}
+              />
+              <div className="flex justify-around mt-4">
+                <WebSearchLink medicineName={medicineInfo.name} />
+                <SOSButton />
+              </div>
             </div>
           )}
-          {/* Show the button only when no image is captured */}
-          {!capturedImage && (
-            <Button onClick={() => {
-              // Placeholder function to simulate medicine identification without camera
-              setMedicineInfo({
-                name: "Example Medicine",
-                dosage: "Take one tablet daily",
-                instructions: "Take with food",
-                sideEffects: "Drowsiness",
-                purpose: "For pain relief",
-              });
-              setCapturedImage("https://picsum.photos/400/300"); // set some image url
-            }} className="mt-4">
-              Simulate Medicine Identification
-            </Button>
-          )}
+           <VoiceCommandAgent/>
+
+           <MicrophoneAnimation />
+           <ChatCompanion/>
         </main>
       </div>
       <Toaster />
