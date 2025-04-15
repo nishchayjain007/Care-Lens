@@ -83,6 +83,14 @@ export default function Home() {
           style={{
             fontSize: `${fontSize}px`,
           }}>
+
+          <div className="flex justify-end w-full">
+            <Button onClick={toggleListening}>
+              {isListening ? 'Stop Listening' : 'Start Listening'}
+              {isListening && <MicrophoneAnimation />}
+            </Button>
+          </div>
+
           <Card className="w-full max-w-md">
             <CardHeader>
               <CardTitle className="text-lg">Welcome to Care Lens+</CardTitle>
@@ -116,10 +124,6 @@ export default function Home() {
           </Button>
           <ReminderDialog />
 
-
-          {isListening && <MicrophoneAnimation />}
-
-
           <ChatCompanion />
 
         </main>
@@ -128,5 +132,3 @@ export default function Home() {
     </SidebarProvider>
   );
 }
-
-
