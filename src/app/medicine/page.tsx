@@ -12,7 +12,16 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
 const MedicineIdentificationPage = () => {
-  const [medicineInfo, setMedicineInfo] = useState(null);
+  const [medicineInfo, setMedicineInfo] = useState<{
+    name: string;
+    dosage: string;
+    instructions: string;
+    sideEffects: string;
+    purpose: string;
+    schedule: string;
+    frequency: string;
+    duration: string;
+  } | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -23,22 +32,31 @@ const MedicineIdentificationPage = () => {
     setIsLoading(true);
     setErrorMessage(null);
 
-    try {
-      const result = await identifyMedicine({ photoUrl: imageSrc });
-      setIsLoading(false);
+    // Mock OCR data
+    const mockOcrData = {
+      name: "Digene",
+      usage: "Used for digestion and acidity",
+      dosage: "2 teaspoons",
+      schedule: "After meals",
+      frequency: "2 times a day",
+      duration: "5 days",
+      sideEffects: "Constipation, chalky taste",
+    };
 
-      if (result.medicineInfo) {
-        setMedicineInfo(result.medicineInfo);
-      } else if (result.error) {
-        setErrorMessage(result.error);
-      } else {
-        setErrorMessage("Could not identify medicine. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error identifying medicine:", error);
+    // Mock setting medicine info based on OCR (replace with actual OCR logic later)
+    setTimeout(() => {
+      setMedicineInfo({
+        name: mockOcrData.name,
+        dosage: mockOcrData.dosage,
+        instructions: mockOcrData.usage, // Using 'usage' for instructions
+        sideEffects: mockOcrData.sideEffects,
+        purpose: mockOcrData.usage, // Using 'usage' for purpose
+        schedule: mockOcrData.schedule,
+        frequency: mockOcrData.frequency,
+        duration: mockOcrData.duration,
+      });
       setIsLoading(false);
-      setErrorMessage("Failed to identify medicine. Please try again.");
-    }
+    }, 1500);
   };
 
   return (
@@ -46,7 +64,11 @@ const MedicineIdentificationPage = () => {
       <h1 className="text-2xl font-semibold mb-4">Medicine Identification</h1>
       {capturedImage ? (
         <div className="mt-4">
-          <img src={capturedImage} alt="Scanned Medicine" className="max-w-md rounded-md shadow-md" />
+          <img
+            src={capturedImage}
+            alt="Scanned Medicine"
+            className="max-w-md rounded-md shadow-md"
+          />
         </div>
       ) : (
         <div className="mt-4">
@@ -72,6 +94,9 @@ const MedicineIdentificationPage = () => {
             instructions={medicineInfo.instructions}
             sideEffects={medicineInfo.sideEffects}
             purpose={medicineInfo.purpose}
+            schedule={medicineInfo.schedule}
+            frequency={medicineInfo.frequency}
+            duration={medicineInfo.duration}
           />
           <div className="flex justify-around mt-4">
             <WebSearchLink medicineName={medicineInfo.name} />

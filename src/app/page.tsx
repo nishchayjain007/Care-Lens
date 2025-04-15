@@ -48,10 +48,10 @@ export default function Home() {
         <main className="flex-1 p-4 flex flex-col items-center space-y-4">
           <Card className="w-full max-w-md">
             <CardHeader>
-              <CardTitle className="text-lg">Welcome to PillPal</CardTitle>
+              <CardTitle className="text-lg">Welcome to Care Lens+</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">Your personal medication companion.</p>
+              <p className="text-muted-foreground">Your AI Powered Care Assistant.</p>
             </CardContent>
           </Card>
 
@@ -92,3 +92,4 @@ export default function Home() {
     </SidebarProvider>
   );
 }
+
