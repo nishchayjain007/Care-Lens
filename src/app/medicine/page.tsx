@@ -23,10 +23,10 @@ interface MedicineDetails {
 }
 
 const MedicineIdentificationPage = () => {
-  const [medicineInfo, setMedicineInfo: React.Dispatch<React.SetStateAction<MedicineDetails | null>>>(null);
-  const [capturedImage, setCapturedImage: React.Dispatch<React.SetStateAction<string | null>>>(null);
-  const [isLoading, setIsLoading: React.Dispatch<React.SetStateAction<boolean>>>(false);
-  const [errorMessage, setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>>(null);
+  const [medicineInfo, setMedicineInfo] = useState<MedicineDetails | null>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleImageCapture = async (imageSrc: string) => {
     setCapturedImage(imageSrc);
