@@ -17,7 +17,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Progress } from "@/components/ui/progress";
-import { VoiceCommandAgent } from "@/components/voice-command-agent";
 import { MicrophoneAnimation } from "@/components/microphone-animation";
 import { ChatCompanion } from "@/components/chat-companion";
 import { useToast } from "@/hooks/use-toast";
@@ -38,96 +37,96 @@ const dummyMedications = [
 
 export default function Home() {
   const [medicineInfo, setMedicineInfo] = useState(null);
-    const [isListening, setIsListening] = useState(false);
-   const [isLoading, setIsLoading] = useState(false);
-   const { toast } = useToast();
-   const router = useRouter();
-   const { theme, setTheme } = useTheme();
-   const [fontSize, setFontSize] = useState(16); // Default font size
-   const videoRef = useRef<HTMLVideoElement>(null);
-   const canvasRef = useRef<HTMLCanvasElement>(null);
-   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-   const [medications, setMedications] = useState(dummyMedications);
-   const [isSpeaking, setIsSpeaking] = useState(false);
-   const [hasCameraPermission, setHasCameraPermission] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
+  const { theme, setTheme } = useTheme();
+  const [fontSize, setFontSize] = useState(16); // Default font size
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [medications, setMedications] = useState(dummyMedications);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [hasCameraPermission, setHasCameraPermission] = useState(false);
 
-   const toggleSpeak = () => {
-        const message = medicineInfo
-            ? `Medicine Name: ${medicineInfo.name}, Usage: ${medicineInfo.purpose}, Dosage: ${medicineInfo.dosage}, Schedule: ${medicineInfo.schedule}, Frequency: ${medicineInfo.frequency}, Duration: ${medicineInfo.duration}, Side Effects: ${medicineInfo.sideEffects}`
-            : 'No medicine information available.';
+  const toggleSpeak = () => {
+    const message = medicineInfo
+      ? `Medicine Name: ${medicineInfo.name}, Usage: ${medicineInfo.purpose}, Dosage: ${medicineInfo.dosage}, Schedule: ${medicineInfo.schedule}, Frequency: ${medicineInfo.frequency}, Duration: ${medicineInfo.duration}, Side Effects: ${medicineInfo.sideEffects}`
+      : 'No medicine information available.';
 
-        if (window.speechSynthesis.speaking) {
-            window.speechSynthesis.cancel();
-        } else {
-            const utterance = new SpeechSynthesisUtterance(message);
-            window.speechSynthesis.speak(utterance)
-        }
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+    } else {
+      const utterance = new SpeechSynthesisUtterance(message);
+      window.speechSynthesis.speak(utterance)
+    }
 
-        setIsSpeaking(!isSpeaking);
-    };
+    setIsSpeaking(!isSpeaking);
+  };
 
-   useEffect(() => {
-     return () => window.speechSynthesis.cancel(); // Cleanup on unmount
-   }, []);
-    const toggleListening = () => {
-        setIsListening(prevIsListening => !prevIsListening);
-    };
+  useEffect(() => {
+    return () => window.speechSynthesis.cancel(); // Cleanup on unmount
+  }, []);
+  const toggleListening = () => {
+    setIsListening(prevIsListening => !prevIsListening);
+  };
 
-   const handleAddMedication = (newMedication: any) => {
-     setMedications([...medications, newMedication]);
-   };
+  const handleAddMedication = (newMedication: any) => {
+    setMedications([...medications, newMedication]);
+  };
 
-   return (
-     
-       
-         
-           <Card className="w-full max-w-md">
-             <CardHeader>
-               <CardTitle className="text-lg">Welcome to Care Lens+</CardTitle>
-               <CardContent>Your AI Powered Care Assistant</CardContent>
-             </CardHeader>
-           </Card>
+  return (
+    <SidebarProvider>
+      <div className="flex h-screen">
+        <main className="flex-1 p-4 flex flex-col items-center space-y-4"
+          style={{
+            fontSize: `${fontSize}px`,
+          }}>
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="text-lg">Welcome to Care Lens+</CardTitle>
+              <CardContent>Your AI Powered Care Assistant</CardContent>
+            </CardHeader>
+          </Card>
 
-           <div className="flex space-x-2">
-               <Button onClick={() => router.push('/medicine')}>
-                   <Icons.camera className="mr-2 h-4 w-4"/>
-                   Identify Medicine
-               </Button>
+          <div className="flex space-x-2">
+            <Button onClick={() => router.push('/medicine')}>
+              <Icons.camera className="mr-2 h-4 w-4" />
+              Identify Medicine
+            </Button>
 
-               <Button onClick={() => router.push('/scanned-medicines')}>
-                   View Scanned Medicines
-               </Button>
-           </div>
+            <Button onClick={() => router.push('/scanned-medicines')}>
+              View Scanned Medicines
+            </Button>
+          </div>
 
-           <div className="flex space-x-2">
-             <Button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
-               {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-             </Button>
-             <Button onClick={() => setFontSize(fontSize + 2)}>A+</Button>
-             <Button onClick={() => setFontSize(fontSize - 2)}>A-</Button>
-           </div>
+          <div className="flex space-x-2">
+            <Button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+              {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+            </Button>
+            <Button onClick={() => setFontSize(fontSize + 2)}>A+</Button>
+            <Button onClick={() => setFontSize(fontSize - 2)}>A-</Button>
+          </div>
 
-           <MedicationForm onAddMedication={handleAddMedication} />
-           <MedicationList medications={medications} />
-              {isSpeaking ? 'Stop Info' : 'Speak Info'}
-              </Button>
-              <ReminderDialog />
-            
-  
-              {isListening && <MicrophoneAnimation />}
-              
- 
+          <MedicationForm onAddMedication={handleAddMedication} />
+          <MedicationList medications={medications} />
+          <Button onClick={toggleSpeak}>
+            {isSpeaking ? 'Stop Info' : 'Speak Info'}
+          </Button>
+          <ReminderDialog />
 
-             <VoiceCommandAgent/>
-  
-             <ChatCompanion/>
-          
-        
-       
 
-       
-     
-   );
- }
- 
+          {isListening && <MicrophoneAnimation />}
+
+
+          <ChatCompanion />
+
+        </main>
+        <Toaster />
+      </div>
+    </SidebarProvider>
+  );
+}
+
 
