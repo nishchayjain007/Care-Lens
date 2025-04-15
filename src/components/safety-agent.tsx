@@ -34,4 +34,3 @@ export const SafetyAgent = () => {
 };
 
 export default SafetyAgent;
-/

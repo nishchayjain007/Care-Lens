@@ -179,7 +179,7 @@ export default function Home() {
                                         )}
                                     </CardContent>
                                 </Card>
-
+                                <MedicationReminderAgent medications={medications} />
                                 {medicineInfo && (
                                     <Card className="w-full max-w-md">
                                         <MedicineInfo
@@ -208,6 +208,7 @@ export default function Home() {
                         </CardHeader>
                     </Card>
                       <Dashboard/>
+                      <SafetyAgent/>
                 </main>
             </div>
             <Toaster />
@@ -228,5 +229,6 @@ function stopSpeechRecognition() {
     console.log('Stopping speech recognition (placeholder)');
     // Implement logic to stop speech recognition
 }
+
 
 
