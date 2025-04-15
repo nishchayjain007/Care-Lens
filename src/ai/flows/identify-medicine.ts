@@ -84,6 +84,26 @@ const extractMedicineName = ai.defineTool(
   }
 );
 
+const medicineInfoPrompt = ai.definePrompt({
+  name: 'medicineInfoPrompt',
+  input: {
+    schema: z.object({
+      medicineName: z.string().describe('The name of the medicine.'),
+    }),
+  },
+  output: {
+    schema: z.object({
+      dosage: z.string().describe('Dosage information, e.g., "Take one tablet daily".'),
+      instructions: z.string().describe('Usage instructions, e.g., "Take with food".'),
+      sideEffects: z.string().describe('Potential side effects, e.g., "Drowsiness".'),
+      purpose: z.string().describe('The purpose of the medicine, e.g., "For pain relief".'),
+    }),
+  },
+  prompt: `You are an expert pharmacist. A user has identified a medicine with the name {{{medicineName}}}.
+Provide the dosage, instructions, side effects, and purpose of this medicine.
+Ensure the information is accurate and concise.`,
+});
+
 const identifyMedicinePrompt = ai.definePrompt({
   name: 'identifyMedicinePrompt',
   tools: [extractMedicineName],
@@ -111,13 +131,15 @@ const identifyMedicineFlow = ai.defineFlow<
   try {
     const {output: {medicineName}} = await identifyMedicinePrompt(input);
 
+    const medicineInformation = await medicineInfoPrompt({medicineName});
+
     return {
       medicineInfo: {
         name: medicineName,
-        dosage: '',
-        instructions: '',
-        sideEffects: '',
-        purpose: '',
+        dosage: medicineInformation.output?.dosage || '',
+        instructions: medicineInformation.output?.instructions || '',
+        sideEffects: medicineInformation.output?.sideEffects || '',
+        purpose: medicineInformation.output?.purpose || '',
       }
     };
   } catch (error: any) {
