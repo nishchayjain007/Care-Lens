@@ -16,8 +16,6 @@ const IdentifyMedicineOutputSchema = z.object({
     name: z.string().describe('The name of the medicine.'),
     dosage: z.string().describe('Dosage information, e.g., "Take one tablet daily".'),
     instructions: z.string().describe('Usage instructions, e.g., "Take with food".'),
-    sideEffects: z.string().describe('Potential side effects, e.g., "Drowsiness".'),
-    purpose: z.string().describe('The purpose of the medicine, e.g., "For pain relief".'),
   })).describe('Information about the identified medicine, or null if not found.'),
   error: z.string().optional().describe('Error message if medicine identification fails.')
 });
@@ -41,7 +39,7 @@ const ocrExtract = ai.defineFlow(
       try {
         // Call the Genkit model to extract text from the image
         const ocrResult = await ai.callModel('googleai/gemini-vision-pro', {
-          prompt: `Carefully extract all text from this image. Ensure that the text is accurate and complete.`,
+          prompt: `Carefully extract all text from this image, prioritizing the medicine name and any dosage instructions. Ensure that the text is accurate and complete. Return only the extracted text.`,
           input: {
             inlineData: {
               data: input.photoBase64,
@@ -64,18 +62,42 @@ const extractMedicineInformation = ai.definePrompt({
   input: {
     schema: z.object({
       scannedText: z.string().describe('The extracted text from the scanned image.'),
+      medicineName: z.string().describe('The name of the medicine extracted from the scanned text.'),
     }),
   },
   output: {
     schema: z.object({
-      medicineInfo: z.string().describe('Information about the medicine, including name, dosage, instructions, side effects, and purpose.'),
+      dosage: z.string().describe('Dosage information, e.g., "Take one tablet daily".'),
+      instructions: z.string().describe('Usage instructions, e.g., "Take with food".'),
     }),
   },
-  prompt: `You are an expert pharmacist. A user has scanned text from a medicine packaging and is requesting information.
-  The scanned text is: {{{scannedText}}}.
-  Use your knowledge and search the internet to extract details to be displayed on the UI such as the medicine name, dosage, instructions, side effects, and purpose of the medicine.
-  Return the information in a concise manner. If you cannot find specific information, state that it's unavailable.
-  Focus on extracting the medicine name, dosage, and usage instructions if available.`,
+  prompt: `You are an expert pharmacist. A user has scanned text from a medicine packaging. 
+The name of the medicine is {{{medicineName}}}.
+The scanned text is: {{{scannedText}}}.
+
+Use your knowledge and search the internet to extract details to be displayed on the UI such as the dosage and instructions of the medicine.
+
+Return the dosage and instruction information in a concise manner. 
+If you cannot find specific information, state that it's unavailable.
+Focus on extracting the medicine name, dosage, and usage instructions if available.`,
+});
+
+const extractMedicineName = ai.definePrompt({
+  name: 'extractMedicineName',
+  input: {
+    schema: z.object({
+      scannedText: z.string().describe('The extracted text from the scanned image.'),
+    }),
+  },
+  output: {
+    schema: z.object({
+      medicineName: z.string().describe('The name of the medicine extracted from the scanned text.'),
+    }),
+  },
+  prompt: `You are an expert pharmacist. A user has scanned text from a medicine packaging.
+The scanned text is: {{{scannedText}}}.
+Carefully extract the name of the medicine from the scanned text. 
+Return just the medicine name. If you cannot find the name, return "N/A".`,
 });
 
 const identifyMedicineFlow = ai.defineFlow<
@@ -95,37 +117,33 @@ const identifyMedicineFlow = ai.defineFlow<
       };
     }
 
-    const medicineInformation = await extractMedicineInformation({ scannedText: ocrResult.extractedText });
+    const medicineNameResult = await extractMedicineName({ scannedText: ocrResult.extractedText });
+    const medicineName = medicineNameResult.output?.medicineName;
 
-    if (!medicineInformation.output?.medicineInfo) {
+    if (!medicineName || medicineName === "N/A") {
+       return {
+         medicineInfo: null,
+         error: "Sorry, I wasn't able to extract the medicine name from the text in the image."
+       };
+    }
+
+    const medicineInformation = await extractMedicineInformation({ 
+      scannedText: ocrResult.extractedText,
+      medicineName: medicineName
+     });
+
+    if (!medicineInformation.output) {
       return {
         medicineInfo: null,
         error: "Could not identify medicine information. Please try again with a clearer image."
       };
     }
 
-    const medicineInfoString = medicineInformation.output.medicineInfo;
-
-    // Improved parsing logic
-    const nameMatch = medicineInfoString.match(/Name:\s*([^\n]+)/i);
-    const dosageMatch = medicineInfoString.match(/Dosage:\s*([^\n]+)/i);
-    const instructionsMatch = medicineInfoString.match(/Instructions:\s*([^\n]+)/i);
-    const sideEffectsMatch = medicineInfoString.match(/Side Effects:\s*([^\n]+)/i);
-    const purposeMatch = medicineInfoString.match(/Purpose:\s*([^\n]+)/i);
-
-    const name = nameMatch ? nameMatch[1].trim() : "N/A";
-    const dosage = dosageMatch ? dosageMatch[1].trim() : "N/A";
-    const instructions = instructionsMatch ? instructionsMatch[1].trim() : "N/A";
-    const sideEffects = sideEffectsMatch ? sideEffectsMatch[1].trim() : "N/A";
-    const purpose = purposeMatch ? purposeMatch[1].trim() : "N/A";
-
     return {
       medicineInfo: {
-        name: name,
-        dosage: dosage,
-        instructions: instructions,
-        sideEffects: sideEffects,
-        purpose: purpose,
+        name: medicineName,
+        dosage: medicineInformation.output.dosage,
+        instructions: medicineInformation.output.instructions,
       }
     };
   } catch (error: any) {
