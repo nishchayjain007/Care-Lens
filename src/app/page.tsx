@@ -27,6 +27,7 @@ import ReminderDialog from "@/components/reminder-dialog";
 import {Textarea} from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 
+
 // Dummy data for the medication list
 const dummyMedications = [
   { id: 1, name: "Aspirin", dosage: "100mg", schedule: "Daily" },
@@ -49,18 +50,37 @@ export default function Home() {
     const [isListening, setIsListening] = useState(false);
     const [medications, setMedications] = useState(dummyMedications);
     const [isSpeaking, setIsSpeaking] = useState(false);
+    const [isSpeakingChatResponse, setIsSpeakingChatResponse] = useState(false);
     const [chatResponse, setChatResponse] = useState('');
     const [chatMessage, setChatMessage] = useState('');
     const [hasCameraPermission, setHasCameraPermission] = useState(false);
 
     const toggleSpeak = () => {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(medicineInfo?.name + " " + medicineInfo?.dosage + " " + medicineInfo?.instructions);
+            window.speechSynthesis.speak(utterance);
+
+            utterance.onstart = () => setIsSpeaking(true);
+            utterance.onend = () => setIsSpeaking(false);
+            utterance.onerror = () => setIsSpeaking(false);
+
+        } else {
+            console.warn('Speech synthesis is not supported in this browser.');
+            toast({title: 'Speech synthesis not supported', description: 'Your browser does not support text to speech.'});
+            setIsSpeaking(false);
+        }
         setIsSpeaking(!isSpeaking);
+    };
+
+    const toggleSpeakChatResponse = () => {
+        setIsSpeakingChatResponse(!isSpeakingChatResponse);
+        speak(chatResponse);
     };
 
     const handleSendMessage = async (msg: string = chatMessage) => {
         setIsLoading(true);
         try {
-            const result = await chatCompanion({ message: msg });
+            const result = await chatCompanion({message: msg});
             setChatResponse(result.response);
         } catch (error) {
             console.error("Error during chat:", error);
@@ -70,81 +90,94 @@ export default function Home() {
         }
     };
 
+    const speak = (text: string) => {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            window.speechSynthesis.speak(utterance);
+
+            utterance.onstart = () => setIsSpeakingChatResponse(true);
+            utterance.onend = () => setIsSpeakingChatResponse(false);
+            utterance.onerror = () => setIsSpeakingChatResponse(false);
+
+        } else {
+            console.warn('Speech synthesis is not supported in this browser.');
+            toast({title: 'Speech synthesis not supported', description: 'Your browser does not support text to speech.'});
+            setIsSpeakingChatResponse(false);
+        }
+    };
+
     useEffect(() => {
-      let recognition: SpeechRecognition | null = null;
-  
-      if ('webkitSpeechRecognition' in window) {
-          const SpeechRecognition = window.webkitSpeechRecognition;
-          recognition = new SpeechRecognition();
-          recognition.continuous = false;
-          recognition.interimResults = false;
-          recognition.lang = 'en-US';
-  
-          recognition.onstart = () => {
-              setIsListening(true);
-              setChatMessage('');
-          };
-  
-          recognition.onresult = (event) => {
-              const transcript = Array.from(event.results)
-                  .map(result => result[0])
-                  .map(result => result.transcript)
-                  .join('');
-  
-              setChatMessage(transcript);
-              handleSendMessage(transcript);
-          };
-  
-          recognition.onend = () => {
-              setIsListening(false);
-          };
-  
-          recognition.onerror = (event) => {
-              console.error('Speech recognition error:', event.error);
-              setIsListening(false);
-          };
-      } else {
-          console.warn('Web Speech API is not supported in this browser.');
-      }
-  
-      const startListening = () => {
-          if (recognition) {
-              try {
-                  recognition.start();
-              } catch (error) {
-                  console.error('Error starting recognition:', error);
-                  setIsListening(false);
-              }
-          }
-      };
-  
-      const stopListening = () => {
-          if (recognition && isListening) {
-              recognition.stop();
-          }
-      };
-  
-      if (isListening && recognition) {
-          startListening();
-      } else if (recognition) {
-          stopListening();
-      }
-  
-      return () => {
-          stopListening();
-          if (recognition) {
-              recognition.onstart = null;
-              recognition.onresult = null;
-              recognition.onend = null;
-              recognition.onerror = null;
-          }
-      };
-  }, [isListening, handleSendMessage]);
-  
+        let recognition: SpeechRecognition | null = null;
+
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                setIsListening(true);
+                setChatMessage('');
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = Array.from(event.results)
+                    .map(result => result[0])
+                    .map(result => result.transcript)
+                    .join('');
+
+                setChatMessage(transcript);
+                handleSendMessage(transcript);
+            };
+
+            recognition.onend = () => {
+                setIsListening(false);
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                setIsListening(false);
+            };
+        } else {
+            console.warn('Web Speech API is not supported in this browser.');
+        }
+
+        const startListening = () => {
+            if (recognition) {
+                try {
+                    recognition.start();
+                } catch (error) {
+                    console.error('Error starting recognition:', error);
+                    setIsListening(false);
+                }
+            }
+        };
+
+        const stopListening = () => {
+            if (recognition && isListening) {
+                recognition.stop();
+            }
+        };
+
+        if (isListening && recognition) {
+            startListening();
+        }
+
+        return () => {
+            stopListening();
+            if (recognition) {
+                recognition.onstart = null;
+                recognition.onresult = null;
+                recognition.onend = null;
+                recognition.onerror = null;
+            }
+        };
+    }, [isListening]);
 
     const toggleListening = () => {
         setIsListening(prevIsListening => !prevIsListening);
     };
+
 
     useEffect(() => {
         return () => window.speechSynthesis.cancel(); // Cleanup on unmount
@@ -154,14 +187,13 @@ export default function Home() {
         <SidebarProvider>
             <div className="flex h-screen">
                 <main className="flex-1 p-4 flex flex-col items-center space-y-4"
-                    style={{
-                        fontSize: `${fontSize}px`,
-                    }}>
+                      style={{
+                          fontSize: `${fontSize}px`,
+                      }}>
                     <Card className="w-full max-w-md">
                         <CardHeader>
                             <CardTitle>
                                 Care Lens+
-                                <br/>
                                 Your AI Powered Care Assistant
                             </CardTitle>
                             <CardContent className="flex flex-col space-y-4">
@@ -217,6 +249,11 @@ export default function Home() {
                                                 {chatResponse}
                                             </div>
                                         )}
+                                        <Button onClick={toggleSpeakChatResponse} disabled={isLoading}>
+                                            {isSpeakingChatResponse ? (
+                                                "Stop Speaking"
+                                            ) : "Speak Info"}
+                                        </Button>
                                     </CardContent>
                                 </Card>
 
@@ -253,3 +290,19 @@ export default function Home() {
         </SidebarProvider>
     );
 }
+
+function startSpeechRecognition(
+    setChatMessage: (message: string) => void,
+    handleSendMessage: (message: string) => void,
+    setIsListening: (isListening: boolean) => void
+) {
+    console.log('Starting speech recognition (placeholder)');
+    // Implement actual speech recognition logic here
+}
+
+function stopSpeechRecognition() {
+    console.log('Stopping speech recognition (placeholder)');
+    // Implement logic to stop speech recognition
+}
+
+
