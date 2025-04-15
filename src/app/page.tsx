@@ -21,12 +21,26 @@ import { VoiceCommandAgent } from "@/components/voice-command-agent";
 import { MicrophoneAnimation } from "@/components/microphone-animation";
 import { ChatCompanion } from "@/components/chat-companion";
 import { useToast } from "@/hooks/use-toast";
+import Dashboard from "@/components/dashboard";
+import MedicationForm from "@/components/medication-form";
+import MedicationList from "@/components/medication-list";
+
+// Dummy data for the medication list
+const dummyMedications = [
+  { id: 1, name: "Aspirin", dosage: "100mg", schedule: "Daily" },
+  { id: 2, name: "Lipitor", dosage: "20mg", schedule: "Evening" },
+];
 
 export default function Home() {
   const [medicineInfo, setMedicineInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const [medications, setMedications] = useState(dummyMedications);
+
+  const handleAddMedication = (newMedication: any) => {
+    setMedications([...medications, newMedication]);
+  };
 
   return (
     <SidebarProvider>
@@ -45,6 +59,11 @@ export default function Home() {
             <Icons.camera className="mr-2 h-4 w-4" />
             Identify Medicine
           </Button>
+
+          <Dashboard />
+
+          <MedicationForm onAddMedication={handleAddMedication} />
+          <MedicationList medications={medications} />
 
           {isLoading && <Progress />}
 
