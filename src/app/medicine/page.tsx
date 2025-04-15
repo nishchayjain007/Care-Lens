@@ -24,9 +24,9 @@ interface MedicineDetails {
 
 const MedicineIdentificationPage = () => {
   const [medicineInfo, setMedicineInfo<MedicineDetails | null>(null);
-  const [capturedImage, setCapturedImage(string | null>(null);
+  const [capturedImage, setCapturedImage<string | null>(null);
   const [isLoading, setIsLoading(false);
-  const [errorMessage, setErrorMessage(string | null>(null);
+  const [errorMessage, setErrorMessage<string | null>(null);
 
   const handleImageCapture = async (imageSrc: string) => {
     setCapturedImage(imageSrc);
