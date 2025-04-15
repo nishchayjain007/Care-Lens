@@ -45,7 +45,7 @@ const ocrExtract = ai.defineFlow(
       try {
         // Call the Genkit model to extract text from the image
         const ocrResult = await ai.callModel('googleai/gemini-vision-pro', {
-          prompt: `Extract all text from this image. Respond only with the extracted text, nothing else.`,
+          prompt: `Carefully extract all text from this image, including the medicine name, dosage, and any instructions. Return the extracted text.`,
           input: {
             inlineData: {
               data: input.photoUrl,
@@ -66,19 +66,21 @@ const ocrExtract = ai.defineFlow(
 const extractMedicineName = ai.defineTool(
   {
     name: 'extractMedicineName',
-    description: 'Extracts the medicine name from the scanned image using OCR.',
+    description: 'Extracts the medicine name from the extracted text using OCR.',
     inputSchema: z.object({
-      photoUrl: z.string().describe('The URL of the scanned medicine packaging image.'),
+      extractedText: z.string().describe('The extracted text from the image.'),
     }),
     outputSchema: z.string().describe('The extracted medicine name.'),
   },
   async input => {
-    // Call ocrExtract flow to get extracted text
-    const ocrResult = await ocrExtract(input);
-    if (ocrResult.extractedText) {
-      console.log(`Extracted text: ${ocrResult.extractedText}`);
-      return ocrResult.extractedText;
-    } else {
+    try {
+      // Call the Genkit model to extract the medicine name from the extracted text
+      const medicineNameResult = await ai.callModel('googleai/gemini-pro', {
+        prompt: `Given the following text extracted from a medicine packaging, identify the medicine name. Respond only with the medicine name, nothing else.\n\nExtracted Text: ${input.extractedText}`,
+      });
+      return medicineNameResult.output;
+    } catch (error: any) {
+      console.error("Error extracting medicine name from text:", error);
       return 'Placeholder Medicine';
     }
   }
@@ -117,7 +119,7 @@ const identifyMedicinePrompt = ai.definePrompt({
       medicineName: z.string().describe('The identified medicine name.'),
     }),
   },
-  prompt: `The user has scanned a medicine packaging.  The URL of the image is at {{{photoUrl}}}.  Extract the medicine name from the image using the extractMedicineName tool.`, // No Handlebars logic/await calls here!
+  prompt: `The user has scanned a medicine packaging.  The URL of the image is at {{{photoUrl}}}. First, use OCR to extract all text from the image.  Then, use the extractMedicineName tool to extract the medicine name from the extracted text.`, // No Handlebars logic/await calls here!
 });
 
 const identifyMedicineFlow = ai.defineFlow<
@@ -129,7 +131,14 @@ const identifyMedicineFlow = ai.defineFlow<
   outputSchema: IdentifyMedicineOutputSchema,
 }, async input => {
   try {
-    const {output: {medicineName}} = await identifyMedicinePrompt(input);
+      const ocrResult = await ocrExtract(input);
+      if (!ocrResult.extractedText) {
+          return {
+              medicineInfo: null,
+              error: "Could not extract text from the image. Please try again."
+          };
+      }
+      const { output: { medicineName } } = await identifyMedicinePrompt({ photoUrl: input.photoUrl });
 
     const medicineInformation = await medicineInfoPrompt({medicineName});
 
