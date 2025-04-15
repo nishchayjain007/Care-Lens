@@ -11,17 +11,19 @@ import { Icons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
+interface MedicineDetails {
+  name: string;
+  dosage: string;
+  instructions: string;
+  sideEffects: string;
+  purpose: string;
+  schedule: string;
+  frequency: string;
+  duration: string;
+}
+
 const MedicineIdentificationPage = () => {
-  const [medicineInfo, setMedicineInfo<{
-    name: string;
-    dosage: string;
-    instructions: string;
-    sideEffects: string;
-    purpose: string;
-    schedule: string;
-    frequency: string;
-    duration: string;
-  } | null>(null);
+  const [medicineInfo, setMedicineInfo<MedicineDetails | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
