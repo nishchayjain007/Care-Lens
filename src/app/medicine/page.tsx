@@ -61,6 +61,12 @@ const MedicineIdentificationPage = () => {
     }
   };
 
+  const handleRetry = () => {
+    setCapturedImage(null);
+    setMedicineInfo(null);
+    setErrorMessage(null);
+  };
+
   return (
     <div className="flex flex-col items-center p-4">
       <h1 className="text-2xl font-semibold mb-4">Medicine Identification</h1>
@@ -85,6 +91,9 @@ const MedicineIdentificationPage = () => {
           <Icons.close className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>{errorMessage}</AlertDescription>
+          <Button onClick={handleRetry} className="mt-2">
+            Retry
+          </Button>
         </Alert>
       )}
 
