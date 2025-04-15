@@ -23,7 +23,7 @@ interface MedicineDetails {
 }
 
 const MedicineIdentificationPage = () => {
-  const [medicineInfo, setMedicineInfo<MedicineDetails | null>(null);
+  const [medicineInfo, setMedicineInfo] = useState<MedicineDetails | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
