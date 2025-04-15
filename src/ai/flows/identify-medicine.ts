@@ -7,7 +7,7 @@ import {ai} from '@/ai/ai-instance';
 import {z} from 'genkit';
 
 const IdentifyMedicineInputSchema = z.object({
-  photoUrl: z.string().describe('The URL of the scanned medicine packaging image.'),
+  photoBase64: z.string().describe('The base64 encoded string of the scanned medicine packaging image.'),
 });
 export type IdentifyMedicineInput = z.infer<typeof IdentifyMedicineInputSchema>;
 
@@ -31,7 +31,7 @@ const ocrExtract = ai.defineFlow(
     {
       name: 'ocrExtract',
       inputSchema: z.object({
-        photoUrl: z.string().describe('The URL of the scanned medicine packaging image.'),
+        photoBase64: z.string().describe('The base64 encoded string of the scanned medicine packaging image.'),
       }),
       outputSchema: z.object({
         extractedText: z.string().describe('Text extracted from the image using OCR'),
@@ -44,7 +44,7 @@ const ocrExtract = ai.defineFlow(
           prompt: `Carefully extract all text from this image, including the medicine name, dosage, and any instructions. Return the extracted text.`,
           input: {
             inlineData: {
-              data: input.photoUrl,
+              data: input.photoBase64,
               mimeType: 'image/png',
             },
           },
@@ -62,7 +62,7 @@ const ocrExtract = ai.defineFlow(
 const extractMedicineName = ai.defineTool(
   {
     name: 'extractMedicineName',
-    description: 'Extracts the medicine name from the extracted text using OCR.',
+    description: 'Extracts the medicine name from the extracted text using OCR. Be very precise and accurate in your response. Consider the text carefully. It is critical to extract the correct medicine name.',
     inputSchema: z.object({
       extractedText: z.string().describe('The extracted text from the image.'),
     }),
@@ -72,7 +72,7 @@ const extractMedicineName = ai.defineTool(
     try {
       // Call the Genkit model to extract the medicine name from the extracted text
       const medicineNameResult = await ai.callModel('googleai/gemini-pro', {
-        prompt: `Given the following text extracted from a medicine packaging, identify the medicine name. Respond only with the medicine name, nothing else.\n\nExtracted Text: ${input.extractedText}`,
+        prompt: `Given the following text extracted from a medicine packaging, identify the medicine name. Respond only with the medicine name, nothing else. It is imperative to be accurate, so please double-check the text. \n\nExtracted Text: ${input.extractedText}`,
       });
       return medicineNameResult.output;
     } catch (error: any) {
@@ -107,7 +107,7 @@ const identifyMedicinePrompt = ai.definePrompt({
   tools: [extractMedicineName],
   input: {
     schema: z.object({
-      photoUrl: z.string().describe('The URL of the scanned medicine packaging image.'),
+      photoBase64: z.string().describe('The base64 encoded string of the scanned medicine packaging image.'),
     }),
   },
   output: {
@@ -115,7 +115,7 @@ const identifyMedicinePrompt = ai.definePrompt({
       medicineName: z.string().describe('The identified medicine name.'),
     }),
   },
-  prompt: `The user has scanned a medicine packaging.  The URL of the image is at {{{photoUrl}}}. First, use OCR to extract all text from the image.  Then, use the extractMedicineName tool to extract the medicine name from the extracted text.`, // No Handlebars logic/await calls here!
+  prompt: `The user has scanned a medicine packaging.  The base64 encoded string of the image is at {{{photoBase64}}}. First, use OCR to extract all text from the image.  Then, use the extractMedicineName tool to extract the medicine name from the extracted text.`, // No Handlebars logic/await calls here!
 });
 
 const identifyMedicineFlow = ai.defineFlow<
@@ -134,7 +134,7 @@ const identifyMedicineFlow = ai.defineFlow<
               error: "Could not extract text from the image. Please try again."
           };
       }
-      const { output: { medicineName } } = await identifyMedicinePrompt({ photoUrl: input.photoUrl });
+      const { output: { medicineName } } = await identifyMedicinePrompt({ photoBase64: input.photoBase64 });
 
     const medicineInformation = await medicineInfoPrompt({medicineName});
 

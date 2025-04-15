@@ -35,7 +35,7 @@ const MedicineIdentificationPage = () => {
     setErrorMessage(null);
 
     try {
-      const result = await identifyMedicine({ photoUrl: imageSrc });
+      const result = await identifyMedicine({ photoBase64: imageSrc });
 
       if (result.medicineInfo) {
         setMedicineInfo({
