@@ -57,11 +57,37 @@ const ocrExtract = ai.defineFlow(
     }
 );
 
+const googleSearch = ai.defineTool(
+    {
+      name: 'googleSearch',
+      description: 'Searches the internet for information using Google Search.',
+      inputSchema: z.object({
+        query: z.string().describe('The search query to use.'),
+      }),
+      outputSchema: z.string().describe('The results of the search.'),
+    },
+    async input => {
+      try {
+        // Call the Genkit model to extract text from the image
+        const searchResult = await ai.callModel('googleai/gemini-pro', {
+          prompt: `You will use Google Search tool to search the internet to gather information. Return the search results.
+Search query: ${input.query}`,
+        });
+
+        // Return the extracted text
+        return searchResult.output;
+      } catch (error: any) {
+        console.error("Error searching information:", error);
+        return "Failed to search for information. Please try again.";
+      }
+    }
+);
+
 const extractMedicineInformation = ai.definePrompt({
   name: 'extractMedicineInformation',
+  tools: [googleSearch],
   input: {
     schema: z.object({
-      scannedText: z.string().describe('The extracted text from the scanned image.'),
       medicineName: z.string().describe('The name of the medicine extracted from the scanned text.'),
     }),
   },
@@ -73,9 +99,8 @@ const extractMedicineInformation = ai.definePrompt({
   },
   prompt: `You are an expert pharmacist. A user has scanned text from a medicine packaging. 
 The name of the medicine is {{{medicineName}}}.
-The scanned text is: {{{scannedText}}}.
 
-Use your knowledge and search the internet to extract details to be displayed on the UI such as the dosage and instructions of the medicine.
+I want you to use the Google Search tool to search the internet to extract details to be displayed on the UI such as the dosage and instructions of the medicine.
 
 Return the dosage and instruction information in a concise manner. 
 If you cannot find specific information, state that it's unavailable.
@@ -127,10 +152,9 @@ const identifyMedicineFlow = ai.defineFlow<
        };
     }
 
-    const medicineInformation = await extractMedicineInformation({ 
-      scannedText: ocrResult.extractedText,
+    const medicineInformation = await extractMedicineInformation({
       medicineName: medicineName
-     });
+    });
 
     if (!medicineInformation.output) {
       return {
