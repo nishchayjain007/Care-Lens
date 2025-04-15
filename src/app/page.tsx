@@ -9,6 +9,7 @@ import WebSearchLink from "@/components/web-search-link";
 import SOSButton from "@/components/sos-button";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import Dashboard from "@/components/dashboard";
 
 export default function Home() {
   const [medicineInfo, setMedicineInfo] = useState(null);
@@ -36,6 +37,7 @@ export default function Home() {
           <h1>Welcome to PillPal</h1>
           <p>Your personal medication companion.</p>
 
+          <Dashboard />
           {capturedImage ? (
             <div className="mt-4">
               <img src={capturedImage} alt="Scanned Medicine" className="max-w-md" />
@@ -83,4 +85,3 @@ export default function Home() {
     </SidebarProvider>
   );
 }
-
