@@ -23,10 +23,10 @@ interface MedicineDetails {
 }
 
 const MedicineIdentificationPage = () => {
-  const [medicineInfo, setMedicineInfo] = useState<MedicineDetails | null>(null);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [medicineInfo, setMedicineInfo<MedicineDetails | null>(null);
+  const [capturedImage, setCapturedImage(string | null>(null);
+  const [isLoading, setIsLoading(false);
+  const [errorMessage, setErrorMessage(string | null>(null);
 
   const handleImageCapture = async (imageSrc: string) => {
     setCapturedImage(imageSrc);
@@ -97,7 +97,7 @@ const MedicineIdentificationPage = () => {
         </Alert>
       )}
 
-      {medicineInfo && (
+      {medicineInfo ? (
         <div className="mt-4 w-full max-w-md">
           <MedicineInfo
             name={medicineInfo.name}
@@ -111,6 +111,23 @@ const MedicineIdentificationPage = () => {
           />
           <div className="flex justify-around mt-4">
             <WebSearchLink medicineName={medicineInfo.name} />
+            <SOSButton />
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 w-full max-w-md">
+          <MedicineInfo
+            name="N/A"
+            dosage="N/A"
+            instructions="N/A"
+            sideEffects="N/A"
+            purpose="N/A"
+            schedule="N/A"
+            frequency="N/A"
+            duration="N/A"
+          />
+           <div className="flex justify-around mt-4">
+            <WebSearchLink medicineName={"Unknown Medicine"} />
             <SOSButton />
           </div>
         </div>
